@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useEditorStore } from '@/lib/store'
-import { Download, Loader2, Save } from 'lucide-react'
+import { Download, Loader2 } from 'lucide-react'
+import { Modal } from '@/components/ui/Modal'
 
 // Social media icons
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -37,7 +38,21 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
   const [isSending, setIsSending] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const [isSavingTelegram, setIsSavingTelegram] = useState(false)
+  const [modal, setModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info'
+  }>({ isOpen: false, title: '', message: '', type: 'info' })
   const { type, title, quote, author, isGenerating } = useEditorStore()
+
+  const showModal = (modalTitle: string, message: string, type: 'success' | 'error' | 'info') => {
+    setModal({ isOpen: true, title: modalTitle, message, type })
+  }
+
+  const closeModal = () => {
+    setModal(prev => ({ ...prev, isOpen: false }))
+  }
 
   // Convert canvas to blob
   const canvasToBlob = (canvas: HTMLCanvasElement): Promise<Blob> => {
@@ -90,13 +105,13 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
       })
       
       if (response.ok) {
-        alert('Image sauvegardée sur Telegram !')
+        showModal('Succès', 'Image sauvegardée sur Telegram !', 'success')
       } else {
-        alert('Erreur lors de la sauvegarde sur Telegram')
+        showModal('Erreur', 'Erreur lors de la sauvegarde sur Telegram', 'error')
       }
     } catch (error) {
       console.error('Failed to send to Telegram:', error)
-      alert('Erreur de connexion à Telegram')
+      showModal('Erreur', 'Erreur de connexion à Telegram', 'error')
     } finally {
       setIsSavingTelegram(false)
     }
@@ -138,7 +153,7 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
             url = `https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(shareText)}`
             break
           case 'instagram':
-            alert('Image téléchargée ! Ouvre Instagram et partage depuis ta galerie.')
+            showModal('Instagram', 'Image téléchargée ! Ouvre Instagram et partage depuis ta galerie.', 'info')
             break
         }
         if (url) window.open(url, '_blank')
@@ -153,8 +168,17 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <button
+    <>
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={closeModal}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+      />
+      
+      <div className="flex flex-col gap-2">
+        <button
         onClick={handleExport}
         disabled={isGenerating || isSending}
         className="flex items-center justify-center gap-2 py-3 text-sm font-semibold rounded-lg bg-primary hover:bg-primary/90 text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
@@ -204,7 +228,8 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
         >
           <InstagramIcon className="w-4 h-4" />
         </button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

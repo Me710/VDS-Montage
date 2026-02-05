@@ -1,14 +1,18 @@
 'use client'
 
+import { useRef } from 'react'
 import { Canvas } from '@/components/editor/Canvas'
 import { TemplateSelector } from '@/components/editor/TemplateSelector'
 import { Controls } from '@/components/editor/Controls'
 import { AIGeneratePanel } from '@/components/ai/AIGeneratePanel'
 import { ImageGallery } from '@/components/gallery/ImageGallery'
 import { LogoUploader } from '@/components/gallery/LogoUploader'
+import { ShareButtons } from '@/components/share/ShareButtons'
 import { Sparkles } from 'lucide-react'
 
 export default function Home() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
   return (
     <main className="h-screen flex flex-col overflow-hidden p-3">
       {/* Compact Header */}
@@ -41,13 +45,14 @@ export default function Home() {
 
         {/* Center - Canvas */}
         <section className="col-span-6 flex items-center justify-center">
-          <Canvas />
+          <Canvas ref={canvasRef} />
         </section>
 
         {/* Right sidebar - Scrollable */}
         <aside className="col-span-3 flex flex-col gap-3 overflow-y-auto pl-1 scrollbar-thin">
           <ImageGallery />
           <LogoUploader />
+          <ShareButtons canvasRef={canvasRef} />
         </aside>
       </div>
     </main>

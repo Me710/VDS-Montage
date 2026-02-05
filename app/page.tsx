@@ -51,9 +51,9 @@ export default function Home() {
 
         {/* Right sidebar - Scrollable */}
         <aside className="col-span-3 flex flex-col gap-3 overflow-y-auto pl-1 scrollbar-thin">
-          <ShareButtons canvasRef={canvasRef} />
           <ImageGallery />
           <LogoUploader />
+          <ShareButtons canvasRef={canvasRef} />
         </aside>
       </div>
     </main>

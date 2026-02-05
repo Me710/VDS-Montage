@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur de Templates - Pensées Quotidiennes</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-pen-fancy"></i>
+                <h1>VDS Templates</h1>
+            </div>
+            <p class="tagline">Créez vos publications quotidiennes inspirantes</p>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <!-- Type Selection -->
+                <section class="control-section">
+                    <h3><i class="fas fa-layer-group"></i> Type de Publication</h3>
+                    <div class="type-selector">
+                        <button class="type-btn active" data-type="jour">
+                            <i class="fas fa-sun"></i>
+                            <span>Pensée du Jour</span>
+                        </button>
+                        <button class="type-btn" data-type="saint">
+                            <i class="fas fa-church"></i>
+                            <span>Pensée de Saint</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Template Selection -->
+                <section class="control-section">
+                    <h3><i class="fas fa-palette"></i> Style de Design</h3>
+                    <div class="template-selector" id="templateSelector">
+                        <!-- Templates will be dynamically populated -->
+                    </div>
+                </section>
+
+                <!-- Text Editor -->
+                <section class="control-section">
+                    <h3><i class="fas fa-edit"></i> Contenu Textuel</h3>
+                    
+                    <div class="form-group">
+                        <label for="titleInput">
+                            <i class="fas fa-heading"></i> Titre
+                        </label>
+                        <input type="text" id="titleInput" class="form-control" value="Pensée du Jour" maxlength="50">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quoteInput">
+                            <i class="fas fa-quote-left"></i> Citation
+                        </label>
+                        <textarea id="quoteInput" class="form-control" rows="4" maxlength="300" placeholder="Entrez votre citation inspirante ici...">La vie est ce que nous en faisons. Les voyages sont les voyageurs. Ce que nous voyons n'est pas ce que nous voyons mais ce que nous sommes.</textarea>
+                        <span class="char-count"><span id="charCount">0</span>/300</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="authorInput">
+                            <i class="fas fa-user"></i> Auteur
+                        </label>
+                        <input type="text" id="authorInput" class="form-control" placeholder="Nom de l'auteur ou du saint" maxlength="50">
+                    </div>
+                </section>
+
+                <!-- Image Upload/Selection -->
+                <section class="control-section">
+                    <h3><i class="fas fa-image"></i> Image de Fond</h3>
+                    
+                    <div class="image-upload-area">
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                        <button class="btn-upload" onclick="document.getElementById('imageUpload').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            Télécharger une Image
+                        </button>
+                    </div>
+
+                    <div class="divider">
+                        <span>ou choisir dans la galerie</span>
+                    </div>
+
+                    <div class="image-gallery" id="imageGallery">
+                        <!-- Gallery images will be populated here -->
+                    </div>
+                </section>
+
+                <!-- Color Customization -->
+                <section class="control-section">
+                    <h3><i class="fas fa-fill-drip"></i> Personnalisation</h3>
+                    
+                    <div class="form-group">
+                        <label for="overlayOpacity">
+                            <i class="fas fa-adjust"></i> Opacité de l'Overlay
+                        </label>
+                        <input type="range" id="overlayOpacity" min="0" max="100" value="50" class="slider">
+                        <span class="slider-value" id="opacityValue">50%</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="frameColor">
+                            <i class="fas fa-border-style"></i> Couleur du Cadre
+                        </label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="frameColor" value="#d4af37">
+                            <input type="text" class="color-text" id="frameColorText" value="#d4af37">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="textColor">
+                            <i class="fas fa-font"></i> Couleur du Texte
+                        </label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="textColor" value="#ffffff">
+                            <input type="text" class="color-text" id="textColorText" value="#ffffff">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="overlayColor">
+                            <i class="fas fa-layer-group"></i> Couleur de l'Overlay
+                        </label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="overlayColor" value="#000000">
+                            <input type="text" class="color-text" id="overlayColorText" value="#000000">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Export Button -->
+                <section class="control-section">
+                    <button class="btn-export" id="exportBtn">
+                        <i class="fas fa-download"></i>
+                        Télécharger (1024x1024 PNG)
+                    </button>
+                </section>
+            </div>
+        </aside>
+
+        <!-- Main Canvas Area -->
+        <main class="canvas-area">
+            <div class="canvas-wrapper">
+                <div class="canvas-container" id="canvasContainer">
+                    <canvas id="mainCanvas" width="1024" height="1024"></canvas>
+                </div>
+                <div class="canvas-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Preview en temps réel - 1024×1024 pixels</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Génération en cours...</p>
+    </div>
+
+    <script src="js/templates.js"></script>
+    <script src="js/gallery.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

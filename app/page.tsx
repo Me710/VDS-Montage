@@ -15,25 +15,6 @@ export default function Home() {
 
   return (
     <main className="h-screen flex flex-col overflow-hidden p-3">
-      {/* Compact Header */}
-      <header className="flex-shrink-0 flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <img 
-            src="/images/logo-vds.png" 
-            alt="VDS Logo" 
-            className="w-9 h-9 object-contain"
-          />
-          <div>
-            <h1 className="text-lg font-bold text-white leading-tight">VDS Montage</h1>
-            <p className="text-xs text-white/50">Créateur de citations</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/20 rounded-full border border-purple-500/30">
-          <Sparkles className="w-3 h-3 text-purple-400" />
-          <span className="text-xs text-purple-300">AI</span>
-        </div>
-      </header>
-
       {/* Main content - Full height */}
       <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
         {/* Left sidebar - Scrollable */}
@@ -43,9 +24,29 @@ export default function Home() {
           <Controls />
         </aside>
 
-        {/* Center - Canvas */}
-        <section className="col-span-6 flex items-center justify-center">
-          <Canvas ref={canvasRef} />
+        {/* Center - Canvas with header */}
+        <section className="col-span-6 flex flex-col">
+          {/* Centered Header */}
+          <header className="flex-shrink-0 flex items-center justify-center gap-3 mb-3 py-2">
+            <img 
+              src="/images/logo-vds.png" 
+              alt="VDS Logo" 
+              className="w-10 h-10 object-contain"
+            />
+            <div className="text-center">
+              <h1 className="text-xl font-bold text-white leading-tight">VDS Montage</h1>
+              <p className="text-xs text-white/50">Créateur de citations</p>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-purple-500/20 rounded-full border border-purple-500/30">
+              <Sparkles className="w-3 h-3 text-purple-400" />
+              <span className="text-xs text-purple-300">AI</span>
+            </div>
+          </header>
+          
+          {/* Canvas */}
+          <div className="flex-1 flex items-center justify-center">
+            <Canvas ref={canvasRef} />
+          </div>
         </section>
 
         {/* Right sidebar - Scrollable */}

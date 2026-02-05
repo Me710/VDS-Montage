@@ -14,9 +14,11 @@ export default function Home() {
       {/* Compact Header */}
       <header className="flex-shrink-0 flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-            <span className="text-dark font-bold text-sm">V</span>
-          </div>
+          <img 
+            src="/images/logo-vds.png" 
+            alt="VDS Logo" 
+            className="w-9 h-9 object-contain"
+          />
           <div>
             <h1 className="text-lg font-bold text-white leading-tight">VDS Montage</h1>
             <p className="text-xs text-white/50">Créateur de citations</p>

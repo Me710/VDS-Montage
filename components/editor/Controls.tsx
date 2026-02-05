@@ -1,9 +1,12 @@
 'use client'
 
 import { useEditorStore } from '@/lib/store'
+import { templates } from '@/lib/templates'
 
 export function Controls() {
   const {
+    type,
+    templateIndex,
     title,
     quote,
     author,
@@ -20,51 +23,128 @@ export function Controls() {
     setOverlayOpacity,
   } = useEditorStore()
 
+  const currentTemplate = templates[type][templateIndex]
+  const isCielType = type === 'ciel'
+  const isEvangileType = type === 'evangile'
+  const isCielSimple = currentTemplate?.frameStyle === 'regard-ciel'
+  const isCielNom = currentTemplate?.frameStyle === 'regard-ciel-nom'
+  const isCielCitation = currentTemplate?.frameStyle === 'regard-ciel-citation'
+  const isEvangileSimple = currentTemplate?.frameStyle === 'evangile-simple'
+  const isEvangileVerset = currentTemplate?.frameStyle === 'evangile-verset'
+  const isEvangileNarratif = currentTemplate?.frameStyle === 'evangile-narratif'
+
+  // Labels based on type
+  let titleLabel = 'Titre'
+  let titlePlaceholder = 'Titre'
+  let quotePlaceholder = 'Citation...'
+  let authorLabel = 'Auteur'
+  let authorPlaceholder = 'Auteur (optionnel)'
+  
+  if (isCielType) {
+    titleLabel = 'Sujet'
+    titlePlaceholder = 'Saint, église, scène biblique...'
+    quotePlaceholder = 'Citation ou verset biblique...'
+    if (isCielCitation) {
+      authorLabel = 'Source'
+      authorPlaceholder = 'Nom du saint'
+    }
+  } else if (isEvangileType) {
+    titleLabel = 'Titre de la scène'
+    titlePlaceholder = 'Le Bon Berger, Les Béatitudes...'
+    quotePlaceholder = 'Verset de l\'Évangile...'
+    authorLabel = 'Référence'
+    authorPlaceholder = 'Jean 10:11'
+  }
+
+  // Show/hide fields based on style
+  // All evangile styles now show title (Titre de la scène)
+  // Simple = Titre + Verset (pas de texte)
+  // Avec Verset = Titre + Extrait + Verset
+  // Narratif = Titre + Texte complet + Verset
+  const showTitle = !isCielSimple
+  const showQuote = !isCielSimple && !isCielNom && !isEvangileSimple // Simple n'a pas d'extrait
+  const showAuthor = !isCielSimple && !isCielNom
+
+  // Get section title
+  let sectionTitle = 'Contenu'
+  if (isCielType) sectionTitle = 'Contenu #UnRegardAuCiel'
+  else if (isEvangileType) sectionTitle = "L'Évangile Illustré"
+
   return (
     <div className="section-card space-y-3 p-4">
-      <h3 className="text-sm font-semibold text-white">Contenu</h3>
+      <h3 className="text-sm font-semibold text-white">{sectionTitle}</h3>
 
       {/* Title input */}
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-white/60">Titre</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={50}
-          className="input-field text-sm py-2"
-          placeholder="Titre"
-        />
-      </div>
+      {showTitle && (
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-white/60">{titleLabel}</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={80}
+            className="input-field text-sm py-2"
+            placeholder={titlePlaceholder}
+          />
+        </div>
+      )}
 
       {/* Quote input */}
-      <div className="space-y-1">
-        <div className="flex justify-between items-center">
-          <label className="text-xs font-medium text-white/60">Citation</label>
-          <span className="text-[10px] text-white/40">{quote.length}/300</span>
+      {showQuote && (
+        <div className="space-y-1">
+          <div className="flex justify-between items-center">
+            <label className="text-xs font-medium text-white/60">
+              {isEvangileType ? (isEvangileNarratif ? 'Évangile complet' : 'Verset') : 'Citation'}
+            </label>
+            <span className="text-[10px] text-white/40">
+              {quote.length}/{isEvangileNarratif ? '1000' : '300'}
+            </span>
+          </div>
+          <textarea
+            value={quote}
+            onChange={(e) => setQuote(e.target.value)}
+            maxLength={isEvangileNarratif ? 1000 : 300}
+            rows={isEvangileNarratif ? 6 : 3}
+            className="textarea-field text-sm py-2"
+            placeholder={isEvangileNarratif ? "Texte complet de l'évangile du jour..." : quotePlaceholder}
+          />
         </div>
-        <textarea
-          value={quote}
-          onChange={(e) => setQuote(e.target.value)}
-          maxLength={300}
-          rows={3}
-          className="textarea-field text-sm py-2"
-          placeholder="Citation..."
-        />
-      </div>
+      )}
 
       {/* Author input */}
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-white/60">Auteur</label>
-        <input
-          type="text"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          maxLength={50}
-          className="input-field text-sm py-2"
-          placeholder="Auteur (optionnel)"
-        />
-      </div>
+      {showAuthor && (
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-white/60">{authorLabel}</label>
+          <input
+            type="text"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            maxLength={50}
+            className="input-field text-sm py-2"
+            placeholder={authorPlaceholder}
+          />
+        </div>
+      )}
+
+      {/* Info message for simple ciel style */}
+      {isCielSimple && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+          <p className="text-xs text-green-400">
+            Style simple : Uploadez ou générez une image religieuse (saint, église, scène biblique, relique...). Le hashtag #UnRegardAuCiel sera ajouté automatiquement.
+          </p>
+        </div>
+      )}
+
+      {/* Info message for evangile type */}
+      {isEvangileType && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+          <p className="text-xs text-amber-400">
+            {isEvangileSimple && "Simple : Titre de la scène + Référence"}
+            {isEvangileVerset && "Avec Verset : Titre + Extrait du texte + Référence"}
+            {isEvangileNarratif && "Narratif : Titre + Texte complet de l'évangile + Référence"}
+          </p>
+        </div>
+      )}
 
       {/* Visual controls */}
       <div className="pt-3 border-t border-white/10 space-y-3">

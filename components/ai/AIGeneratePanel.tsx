@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useEditorStore } from '@/lib/store'
-import { Sparkles, MessageSquare, Image, Wand2, Loader2 } from 'lucide-react'
+import { Sparkles, MessageSquare, Image, Wand2, Loader2, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function AIGeneratePanel() {
@@ -17,9 +17,14 @@ export function AIGeneratePanel() {
     setGeneratedContent,
     setGeneratedImage,
     getCurrentTemplate,
+    setTitle,
+    setQuote,
+    setAuthor,
+    setTemplateIndex,
   } = useEditorStore()
 
   const [error, setError] = useState<string | null>(null)
+  const [fetchingEvangile, setFetchingEvangile] = useState(false)
 
   const generateText = async () => {
     setError(null)
@@ -85,6 +90,45 @@ export function AIGeneratePanel() {
     }
   }
 
+  // Fetch Gospel of the day from AELF.org
+  const fetchEvangileOfDay = async (useFullText: boolean = false) => {
+    setError(null)
+    setFetchingEvangile(true)
+
+    try {
+      const response = await fetch('/api/evangile')
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Erreur lors de la récupération de l'évangile")
+      }
+
+      const data = await response.json()
+      
+      // Select appropriate style:
+      // - "Verset clé" → Style "Avec Verset" (index 1): Titre + Extrait + Référence
+      // - "Texte complet" → Style "Narratif" (index 2): Titre + Texte complet + Référence
+      if (useFullText) {
+        setTemplateIndex(2) // Narratif style
+        setQuote(data.fullText)
+      } else {
+        setTemplateIndex(1) // Avec Verset style
+        setQuote(data.shortVerse)
+      }
+      
+      // All styles now include title
+      setTitle(data.title)
+      setAuthor(data.reference)
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur de connexion à AELF.org")
+    } finally {
+      setFetchingEvangile(false)
+    }
+  }
+
+  const isEvangileType = type === 'evangile'
+
   return (
     <div className="section-card space-y-3 p-4">
       <div className="flex items-center gap-2">
@@ -142,6 +186,42 @@ export function AIGeneratePanel() {
           Image
         </button>
       </div>
+
+      {/* Evangile du jour button - only for evangile type */}
+      {isEvangileType && (
+        <div className="pt-2 border-t border-white/10 space-y-2">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-medium text-white/80">AELF.org - Évangile du jour</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => fetchEvangileOfDay(false)}
+              disabled={fetchingEvangile}
+              className="btn-secondary text-xs py-2 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20"
+            >
+              {fetchingEvangile ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <BookOpen className="w-3.5 h-3.5" />
+              )}
+              Verset clé
+            </button>
+            <button
+              onClick={() => fetchEvangileOfDay(true)}
+              disabled={fetchingEvangile}
+              className="btn-secondary text-xs py-2 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20"
+            >
+              {fetchingEvangile ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <BookOpen className="w-3.5 h-3.5" />
+              )}
+              Texte complet
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Error message */}
       {error && (

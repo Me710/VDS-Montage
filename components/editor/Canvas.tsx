@@ -1,11 +1,17 @@
 'use client'
 
-import { useEffect, useCallback, forwardRef } from 'react'
+import { useEffect, useCallback, forwardRef, useRef, useState } from 'react'
 import { useEditorStore } from '@/lib/store'
 import { renderCanvas, CANVAS_SIZE } from '@/lib/canvas-utils'
 import { Loader2 } from 'lucide-react'
 
-export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, ref) {
+export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalRef) {
+  const internalRef = useRef<HTMLCanvasElement>(null)
+  const [canvasReady, setCanvasReady] = useState(false)
+  
+  // Always use internal ref for canvas operations
+  const canvasRef = internalRef
+  
   const {
     type,
     templateIndex,
@@ -22,28 +28,47 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, ref) {
     getCurrentTemplate,
   } = useEditorStore()
 
+  // Mark canvas as ready after mount
+  useEffect(() => {
+    setCanvasReady(true)
+  }, [])
+
   const updateCanvas = useCallback(async () => {
-    const canvas = ref && 'current' in ref ? ref.current : null
-    if (!canvas) return
+    const canvas = canvasRef?.current
+    if (!canvas) {
+      console.log('Canvas not available')
+      return
+    }
 
     const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    if (!ctx) {
+      console.log('Context not available')
+      return
+    }
 
     const template = getCurrentTemplate()
+    if (!template) {
+      console.log('Template not available')
+      return
+    }
     
-    await renderCanvas(ctx, template, {
-      title,
-      quote,
-      author,
-      backgroundImage,
-      customLogo,
-      frameColor,
-      textColor,
-      overlayColor,
-      overlayOpacity,
-    })
+    try {
+      await renderCanvas(ctx, template, {
+        title,
+        quote,
+        author,
+        backgroundImage,
+        customLogo,
+        frameColor,
+        textColor,
+        overlayColor,
+        overlayOpacity,
+      })
+    } catch (error) {
+      console.error('Error in renderCanvas:', error)
+    }
   }, [
-    ref,
+    canvasRef,
     type,
     templateIndex,
     title,
@@ -58,25 +83,54 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, ref) {
     getCurrentTemplate,
   ])
 
+  // Update canvas when dependencies change
   useEffect(() => {
-    updateCanvas()
-  }, [updateCanvas])
+    if (canvasReady) {
+      updateCanvas()
+    }
+  }, [updateCanvas, canvasReady])
+  
+  // Also update on initial mount with a small delay to ensure DOM is ready
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateCanvas()
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Callback ref to handle both internal and external refs
+  const setRefs = useCallback((node: HTMLCanvasElement | null) => {
+    // Set internal ref
+    (internalRef as React.MutableRefObject<HTMLCanvasElement | null>).current = node
+    
+    // Forward to external ref if provided
+    if (externalRef) {
+      if (typeof externalRef === 'function') {
+        externalRef(node)
+      } else {
+        (externalRef as React.MutableRefObject<HTMLCanvasElement | null>).current = node
+      }
+    }
+  }, [externalRef])
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="relative canvas-container p-1.5 flex items-center justify-center">
+    <div className="flex items-center justify-center h-full w-full">
+      <div className="relative canvas-container p-1 md:p-1.5 flex items-center justify-center">
         <canvas
-          ref={ref}
+          ref={setRefs}
           width={CANVAS_SIZE}
           height={CANVAS_SIZE}
           className="max-w-full max-h-full rounded-lg object-contain"
-          style={{ maxHeight: 'calc(100vh - 140px)' }}
+          style={{ 
+            maxHeight: 'calc(100vh - 140px)',
+            maxWidth: 'calc(100vw - 16px)'
+          }}
         />
         
         {isGenerating && (
-          <div className="absolute inset-0 bg-dark/80 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-10 h-10 text-primary animate-spin" />
-            <p className="text-white text-sm font-medium">Génération...</p>
+          <div className="absolute inset-0 bg-dark/80 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center gap-2 md:gap-3">
+            <Loader2 className="w-8 h-8 md:w-10 md:h-10 text-primary animate-spin" />
+            <p className="text-white text-xs md:text-sm font-medium">Génération...</p>
           </div>
         )}
       </div>

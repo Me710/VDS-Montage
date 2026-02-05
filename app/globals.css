@@ -199,8 +199,9 @@ body {
 
 /* Type selector */
 .type-btn {
-  @apply flex items-center gap-2 px-5 py-2.5 rounded-xl text-white/70 
-         transition-all duration-300 hover:text-white hover:bg-white/10;
+  @apply flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-white/70 
+         transition-all duration-300 hover:text-white hover:bg-white/10 
+         whitespace-nowrap text-center;
 }
 
 .type-btn.active {
@@ -221,4 +222,101 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* ===================== */
+/* RESPONSIVE STYLES     */
+/* ===================== */
+
+/* Mobile-first adjustments */
+@media (max-width: 1023px) {
+  /* Smaller section cards on mobile */
+  .section-card {
+    @apply p-3;
+  }
+
+  /* Smaller buttons on mobile */
+  .btn-primary,
+  .btn-secondary,
+  .btn-ai {
+    @apply px-4 py-2 text-sm;
+  }
+
+  /* Smaller inputs on mobile */
+  .input-field,
+  .textarea-field {
+    @apply px-3 py-2 text-sm;
+  }
+
+  /* Type buttons more compact */
+  .type-btn {
+    @apply px-3 py-2 text-sm;
+  }
+
+  /* Template buttons smaller */
+  .template-btn {
+    @apply p-2 gap-1;
+  }
+
+  /* Gallery items smaller */
+  .gallery-item {
+    @apply rounded-md;
+  }
+
+  /* Canvas container adjustments */
+  .canvas-container {
+    @apply rounded-lg;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Color picker smaller */
+  .color-picker-wrapper input[type="color"] {
+    @apply w-8 h-8;
+  }
+}
+
+/* Tablet specific */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .section-card {
+    @apply p-4;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+  .section-card {
+    @apply p-2;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-ai {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .type-btn {
+    @apply px-2 py-1.5 text-xs;
+  }
+}
+
+/* Touch-friendly tap targets */
+@media (hover: none) and (pointer: coarse) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-ai,
+  .type-btn,
+  .template-btn {
+    min-height: 44px;
+  }
+
+  .gallery-item {
+    min-height: 60px;
+  }
+}
+
+/* Safe area padding for notched devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-bottom-panel {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

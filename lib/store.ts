@@ -44,7 +44,7 @@ export interface EditorState {
   getCurrentTemplate: () => Template
   
   // Batch updates for AI generation
-  setGeneratedContent: (content: { quote: string; author: string }) => void
+  setGeneratedContent: (content: { quote: string; author: string; title?: string }) => void
   setGeneratedImage: (url: string) => void
 }
 
@@ -66,12 +66,32 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   generatingImage: false,
   
   // Actions
-  setType: (type) => set((state) => ({
-    type,
-    templateIndex: 0,
-    title: type === 'jour' ? 'Pensée du Jour' : 'Pensée de Saint',
-    backgroundImage: null,
-  })),
+  setType: (type) => set((state) => {
+    let title = 'Pensée du Jour'
+    let quote = state.quote
+    let author = state.author
+    
+    if (type === 'saint') {
+      title = 'Pensée de Saint'
+    } else if (type === 'ciel') {
+      title = ''
+      quote = ''
+      author = ''
+    } else if (type === 'evangile') {
+      title = "L'Évangile Illustré"
+      quote = ''
+      author = ''
+    }
+    
+    return {
+      type,
+      templateIndex: 0,
+      title,
+      quote,
+      author,
+      backgroundImage: null,
+    }
+  }),
   
   setTemplateIndex: (templateIndex) => set({ templateIndex }),
   setTitle: (title) => set({ title }),
@@ -94,11 +114,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
   
   // Batch updates
-  setGeneratedContent: (content) => set({
+  setGeneratedContent: (content) => set((state) => ({
     quote: content.quote,
     author: content.author,
+    // For "ciel" type, also set the title if provided
+    title: content.title || state.title,
     generatingText: false,
-  }),
+  })),
   
   setGeneratedImage: (url) => set({
     backgroundImage: url,

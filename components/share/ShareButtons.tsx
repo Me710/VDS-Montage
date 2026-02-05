@@ -153,64 +153,57 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
   }
 
   return (
-    <div className="section-card">
-      <h3 className="section-title">
-        <Download className="w-4 h-4 text-primary" />
-        Exporter & Partager
-      </h3>
+    <div className="flex flex-col gap-2">
+      <button
+        onClick={handleExport}
+        disabled={isGenerating || isSending}
+        className="flex items-center justify-center gap-2 py-3 text-sm font-semibold rounded-lg bg-primary hover:bg-primary/90 text-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
+      >
+        <Download className="w-4 h-4" />
+        TÉLÉCHARGER PNG
+      </button>
       
-      <div className="flex flex-col gap-2">
+      <button
+        onClick={handleSaveToTelegram}
+        disabled={isGenerating || isSavingTelegram}
+        className="flex items-center justify-center gap-2 py-3 text-sm font-semibold rounded-lg bg-[#0088cc] hover:bg-[#0077b5] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
+      >
+        {isSavingTelegram ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <TelegramIcon className="w-4 h-4" />
+        )}
+        SAUVEGARDER TELEGRAM
+      </button>
+      
+      <div className="grid grid-cols-3 gap-2 mt-1">
         <button
-          onClick={handleExport}
-          disabled={isGenerating || isSending}
-          className="btn-primary py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed w-full"
+          onClick={() => handleShare('whatsapp')}
+          disabled={isGenerating || isSharing}
+          className="flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium rounded-lg bg-[#25D366] hover:bg-[#20BD5A] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Download className="w-4 h-4" />
-          Télécharger PNG
-        </button>
-        
-        <button
-          onClick={handleSaveToTelegram}
-          disabled={isGenerating || isSavingTelegram}
-          className="flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg bg-[#0088cc] hover:bg-[#0077b5] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
-        >
-          {isSavingTelegram ? (
+          {isSharing ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <TelegramIcon className="w-4 h-4" />
+            <WhatsAppIcon className="w-4 h-4" />
           )}
-          Sauvegarder Telegram
         </button>
         
-        <div className="grid grid-cols-3 gap-2 mt-1">
-          <button
-            onClick={() => handleShare('whatsapp')}
-            disabled={isGenerating || isSharing}
-            className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium rounded-lg bg-[#25D366] hover:bg-[#20BD5A] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSharing ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <WhatsAppIcon className="w-3.5 h-3.5" />
-            )}
-          </button>
-          
-          <button
-            onClick={() => handleShare('facebook')}
-            disabled={isGenerating || isSharing}
-            className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium rounded-lg bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FacebookIcon className="w-3.5 h-3.5" />
-          </button>
-          
-          <button
-            onClick={() => handleShare('instagram')}
-            disabled={isGenerating || isSharing}
-            className="flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium rounded-lg bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <InstagramIcon className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <button
+          onClick={() => handleShare('facebook')}
+          disabled={isGenerating || isSharing}
+          className="flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium rounded-lg bg-[#1877F2] hover:bg-[#166FE5] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <FacebookIcon className="w-4 h-4" />
+        </button>
+        
+        <button
+          onClick={() => handleShare('instagram')}
+          disabled={isGenerating || isSharing}
+          className="flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-medium rounded-lg bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] hover:opacity-90 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <InstagramIcon className="w-4 h-4" />
+        </button>
       </div>
     </div>
   )

@@ -136,8 +136,7 @@ export const galleryImages: Record<TemplateType, GalleryImage[]> = {
     { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1024&h=1024&fit=crop', name: 'Lac Paisible', category: 'nature' },
     { url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1024&h=1024&fit=crop', name: 'Route Inspirante', category: 'nature' },
     { url: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1024&h=1024&fit=crop', name: 'Ciel Étoilé', category: 'nature' },
-    { url: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=1024&h=1024&fit=crop', name: 'Prairie Dorée', category: 'nature' },
-    { url: 'https://images.unsplash.com/photo-1518173946687-a4c036bc1014?w=1024&h=1024&fit=crop', name: 'Coucher de Soleil', category: 'nature' }
+    { url: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=1024&h=1024&fit=crop', name: 'Prairie Dorée', category: 'nature' }
   ],
   saint: [
     { url: 'https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=1024&h=1024&fit=crop', name: 'Cathédrale Divine', category: 'spiritual' },

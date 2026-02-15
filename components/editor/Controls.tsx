@@ -1,6 +1,6 @@
 'use client'
 
-import { useEditorStore } from '@/lib/store'
+import { useEditorStore, AVAILABLE_FONTS } from '@/lib/store'
 import { templates } from '@/lib/templates'
 
 export function Controls() {
@@ -14,6 +14,8 @@ export function Controls() {
     textColor,
     overlayColor,
     overlayOpacity,
+    customFontFamily,
+    fontSizeOffset,
     setTitle,
     setQuote,
     setAuthor,
@@ -21,6 +23,8 @@ export function Controls() {
     setTextColor,
     setOverlayColor,
     setOverlayOpacity,
+    setCustomFontFamily,
+    setFontSizeOffset,
   } = useEditorStore()
 
   const currentTemplate = templates[type][templateIndex]
@@ -145,6 +149,51 @@ export function Controls() {
           </p>
         </div>
       )}
+
+      {/* Typography controls */}
+      <div className="pt-3 border-t border-white/10 space-y-3">
+        <h4 className="text-xs font-semibold text-white">Typographie</h4>
+
+        {/* Font family selector */}
+        <div className="space-y-1">
+          <label className="text-[10px] text-white/50">Police</label>
+          <select
+            value={customFontFamily}
+            onChange={(e) => setCustomFontFamily(e.target.value)}
+            className="input-field text-sm py-2 w-full"
+            style={{ fontFamily: customFontFamily || undefined }}
+          >
+            {AVAILABLE_FONTS.map((font) => (
+              <option key={font.value} value={font.value} style={{ fontFamily: font.value || undefined }}>
+                {font.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Font size offset slider */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center">
+            <label className="text-xs text-white/60">Taille de police</label>
+            <span className="text-xs text-primary font-medium">
+              {fontSizeOffset > 0 ? `+${fontSizeOffset}` : fontSizeOffset}px
+            </span>
+          </div>
+          <input
+            type="range"
+            min="-20"
+            max="20"
+            value={fontSizeOffset}
+            onChange={(e) => setFontSizeOffset(parseInt(e.target.value))}
+            className="slider w-full"
+          />
+          <div className="flex justify-between text-[9px] text-white/30">
+            <span>Plus petit</span>
+            <span>Normal</span>
+            <span>Plus grand</span>
+          </div>
+        </div>
+      </div>
 
       {/* Visual controls */}
       <div className="pt-3 border-t border-white/10 space-y-3">

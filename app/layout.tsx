@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Playfair_Display } from 'next/font/google'
+import { Inter, Playfair_Display, Lora, Merriweather, Cinzel, Cormorant_Garamond, Dancing_Script, Libre_Baskerville } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({ 
@@ -10,6 +10,39 @@ const inter = Inter({
 const playfair = Playfair_Display({ 
   subsets: ['latin'],
   variable: '--font-playfair',
+})
+
+const lora = Lora({
+  subsets: ['latin'],
+  variable: '--font-lora',
+})
+
+const merriweather = Merriweather({
+  weight: ['300', '400', '700', '900'],
+  subsets: ['latin'],
+  variable: '--font-merriweather',
+})
+
+const cinzel = Cinzel({
+  subsets: ['latin'],
+  variable: '--font-cinzel',
+})
+
+const cormorant = Cormorant_Garamond({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-cormorant',
+})
+
+const dancing = Dancing_Script({
+  subsets: ['latin'],
+  variable: '--font-dancing',
+})
+
+const baskerville = Libre_Baskerville({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-baskerville',
 })
 
 export const metadata: Metadata = {
@@ -27,7 +60,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="fr" className={`${inter.variable} ${playfair.variable} ${lora.variable} ${merriweather.variable} ${cinzel.variable} ${cormorant.variable} ${dancing.variable} ${baskerville.variable}`}>
       <body className={`${inter.className} antialiased`}>
         {children}
       </body>

@@ -239,14 +239,19 @@ export const galleryImages: Record<TemplateType, GalleryImage[]> = {
     { url: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=1024&h=1024&fit=crop', name: 'Prairie Dorée', category: 'nature' }
   ],
   saint: [
-    { url: 'https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=1024&h=1024&fit=crop', name: 'Cathédrale Divine', category: 'spiritual' },
-    { url: 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=1024&h=1024&fit=crop', name: 'Monastère Ancien', category: 'spiritual' },
-    { url: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?w=1024&h=1024&fit=crop', name: 'Nuages Célestes', category: 'spiritual' },
-    { url: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=1024&h=1024&fit=crop', name: 'Lumière Divine', category: 'spiritual' },
+    // Images variées : saints, croix, prière, lumière divine, vitraux, bougies...
+    { url: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1024&h=1024&fit=crop', name: 'Croix au Coucher de Soleil', category: 'spiritual' },
     { url: 'https://images.unsplash.com/photo-1504551591408-94a57e84ff1e?w=1024&h=1024&fit=crop', name: 'Vitraux Sacrés', category: 'spiritual' },
-    { url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1024&h=1024&fit=crop', name: 'Cloître Paisible', category: 'spiritual' },
+    { url: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=1024&h=1024&fit=crop', name: 'Lumière Divine', category: 'spiritual' },
+    { url: 'https://images.unsplash.com/photo-1476900966873-ab290e38e3f7?w=1024&h=1024&fit=crop', name: 'Bougies de Prière', category: 'spiritual' },
+    { url: 'https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=1024&h=1024&fit=crop', name: 'Bible Ouverte', category: 'spiritual' },
     { url: 'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=1024&h=1024&fit=crop', name: 'Ciel Mystique', category: 'spiritual' },
-    { url: 'https://images.unsplash.com/photo-1445810694374-0a94739e4a03?w=1024&h=1024&fit=crop', name: 'Chapelle Lumineuse', category: 'spiritual' }
+    { url: 'https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=1024&h=1024&fit=crop', name: 'Statue Sacrée', category: 'spiritual' },
+    { url: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?w=1024&h=1024&fit=crop', name: 'Nuages Célestes', category: 'spiritual' },
+    { url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?w=1024&h=1024&fit=crop', name: 'Mains en Prière', category: 'spiritual' },
+    { url: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1024&h=1024&fit=crop', name: 'Chapelet et Rose', category: 'spiritual' },
+    { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1024&h=1024&fit=crop', name: 'Sentier de Méditation', category: 'spiritual' },
+    { url: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1024&h=1024&fit=crop', name: 'Étoiles et Ciel Infini', category: 'spiritual' }
   ],
   ciel: [
     { url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?w=1024&h=1024&fit=crop', name: 'Vierge Marie', category: 'saints' },
@@ -257,11 +262,18 @@ export const galleryImages: Record<TemplateType, GalleryImage[]> = {
     { url: 'https://images.unsplash.com/photo-1504551591408-94a57e84ff1e?w=1024&h=1024&fit=crop', name: 'Vitrail Sacré', category: 'saints' }
   ],
   evangile: [
+    // Images variées : paysages bibliques, scènes du Moyen-Orient, oliviers, désert, mer...
     { url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1024&h=1024&fit=crop', name: 'Paysage Biblique', category: 'biblical' },
     { url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1024&h=1024&fit=crop', name: 'Chemin de Lumière', category: 'biblical' },
-    { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1024&h=1024&fit=crop', name: 'Vallée Paisible', category: 'biblical' },
     { url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1024&h=1024&fit=crop', name: 'Montagne Sacrée', category: 'biblical' },
-    { url: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=1024&h=1024&fit=crop', name: 'Champs Dorés', category: 'biblical' },
-    { url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1024&h=1024&fit=crop', name: 'Lac au Crépuscule', category: 'biblical' }
+    { url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1024&h=1024&fit=crop', name: 'Mer de Galilée', category: 'biblical' },
+    { url: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=1024&h=1024&fit=crop', name: 'Oliviers Anciens', category: 'biblical' },
+    { url: 'https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?w=1024&h=1024&fit=crop', name: 'Désert et Dunes', category: 'biblical' },
+    { url: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1024&h=1024&fit=crop', name: 'Lac au Crépuscule', category: 'biblical' },
+    { url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1024&h=1024&fit=crop', name: 'Lever de Soleil Montagne', category: 'biblical' },
+    { url: 'https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=1024&h=1024&fit=crop', name: 'Champs de Blé Dorés', category: 'biblical' },
+    { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1024&h=1024&fit=crop', name: 'Vallée Paisible', category: 'biblical' },
+    { url: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=1024&h=1024&fit=crop', name: 'Rayon de Lumière Forêt', category: 'biblical' },
+    { url: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1024&h=1024&fit=crop', name: 'Rivière Paisible', category: 'biblical' }
   ]
 }

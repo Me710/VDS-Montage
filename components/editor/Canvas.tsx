@@ -24,6 +24,8 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
     textColor,
     overlayColor,
     overlayOpacity,
+    customFontFamily,
+    fontSizeOffset,
     isGenerating,
     getCurrentTemplate,
   } = useEditorStore()
@@ -63,6 +65,8 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
         textColor,
         overlayColor,
         overlayOpacity,
+        customFontFamily,
+        fontSizeOffset,
       })
     } catch (error) {
       console.error('Error in renderCanvas:', error)
@@ -80,6 +84,8 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
     textColor,
     overlayColor,
     overlayOpacity,
+    customFontFamily,
+    fontSizeOffset,
     getCurrentTemplate,
   ])
 

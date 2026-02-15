@@ -1,6 +1,18 @@
 import { create } from 'zustand'
 import { templates, type TemplateType, type Template } from './templates'
 
+export const AVAILABLE_FONTS = [
+  { value: '', label: 'Par défaut (template)' },
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'Lora', label: 'Lora' },
+  { value: 'Merriweather', label: 'Merriweather' },
+  { value: 'Cinzel', label: 'Cinzel' },
+  { value: 'Cormorant Garamond', label: 'Cormorant Garamond' },
+  { value: 'Dancing Script', label: 'Dancing Script' },
+  { value: 'Libre Baskerville', label: 'Libre Baskerville' },
+]
+
 export interface EditorState {
   // Type and template
   type: TemplateType
@@ -19,6 +31,10 @@ export interface EditorState {
   overlayColor: string
   overlayOpacity: number
   
+  // Font customization
+  customFontFamily: string  // '' means use template default
+  fontSizeOffset: number    // -20 to +20, adjusts all font sizes
+  
   // AI Generation state
   isGenerating: boolean
   generatingText: boolean
@@ -36,6 +52,8 @@ export interface EditorState {
   setTextColor: (color: string) => void
   setOverlayColor: (color: string) => void
   setOverlayOpacity: (opacity: number) => void
+  setCustomFontFamily: (font: string) => void
+  setFontSizeOffset: (offset: number) => void
   setIsGenerating: (generating: boolean) => void
   setGeneratingText: (generating: boolean) => void
   setGeneratingImage: (generating: boolean) => void
@@ -61,6 +79,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   textColor: '#ffffff',
   overlayColor: '#000000',
   overlayOpacity: 50,
+  customFontFamily: '',
+  fontSizeOffset: 0,
   isGenerating: false,
   generatingText: false,
   generatingImage: false,
@@ -103,6 +123,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setTextColor: (textColor) => set({ textColor }),
   setOverlayColor: (overlayColor) => set({ overlayColor }),
   setOverlayOpacity: (overlayOpacity) => set({ overlayOpacity }),
+  setCustomFontFamily: (customFontFamily) => set({ customFontFamily }),
+  setFontSizeOffset: (fontSizeOffset) => set({ fontSizeOffset }),
   setIsGenerating: (isGenerating) => set({ isGenerating }),
   setGeneratingText: (generatingText) => set({ generatingText }),
   setGeneratingImage: (generatingImage) => set({ generatingImage }),

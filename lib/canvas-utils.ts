@@ -11,9 +11,30 @@ export interface CanvasState {
   textColor: string
   overlayColor: string
   overlayOpacity: number
+  customFontFamily: string
+  fontSizeOffset: number
 }
 
 export const CANVAS_SIZE = 1024
+
+// Helper: resolve font family (custom override or template default)
+function resolveFont(templateFont: string, customFont: string): string {
+  return customFont || templateFont
+}
+
+// Helper: resolve font size with offset (clamped to min 8px)
+function resolveSize(templateSize: number, offset: number): number {
+  return Math.max(8, templateSize + offset)
+}
+
+// Helper: get font fallback string based on font family
+function fontFallback(font: string): string {
+  const serifFonts = ['Playfair Display', 'Lora', 'Merriweather', 'Cinzel', 'Cormorant Garamond', 'Libre Baskerville']
+  const scriptFonts = ['Dancing Script']
+  if (scriptFonts.includes(font)) return `'${font}', cursive`
+  if (serifFonts.includes(font)) return `'${font}', serif`
+  return `'${font}', sans-serif`
+}
 
 export async function renderCanvas(
   ctx: CanvasRenderingContext2D,
@@ -346,8 +367,16 @@ function drawTextContent(ctx: CanvasRenderingContext2D, template: Template, stat
   const centerX = canvas.width / 2
   const centerY = canvas.height / 2
 
+  // Resolve custom fonts and sizes
+  const titleFont = resolveFont(template.titleFont, state.customFontFamily)
+  const quoteFont = resolveFont(template.quoteFont, state.customFontFamily)
+  const authorFont = resolveFont(template.authorFont, state.customFontFamily)
+  const titleSize = resolveSize(template.titleSize, state.fontSizeOffset)
+  const quoteSize = resolveSize(template.quoteSize, state.fontSizeOffset)
+  const authorSize = resolveSize(template.authorSize, state.fontSizeOffset)
+
   // Draw title
-  ctx.font = `${template.titleSize}px '${template.titleFont}', serif`
+  ctx.font = `${titleSize}px ${fontFallback(titleFont)}`
   ctx.fillText(state.title, centerX, 200)
 
   // Draw decorative line under title
@@ -356,12 +385,12 @@ function drawTextContent(ctx: CanvasRenderingContext2D, template: Template, stat
 
   // Draw quote (with text wrapping)
   ctx.fillStyle = state.textColor
-  ctx.font = `${template.quoteSize}px '${template.quoteFont}', sans-serif`
-  wrapText(ctx, state.quote, centerX, centerY, 700, template.quoteSize * 1.4)
+  ctx.font = `${quoteSize}px ${fontFallback(quoteFont)}`
+  wrapText(ctx, state.quote, centerX, centerY, 700, quoteSize * 1.4)
 
   // Draw author
   if (state.author) {
-    ctx.font = `italic ${template.authorSize}px '${template.authorFont}', serif`
+    ctx.font = `italic ${authorSize}px ${fontFallback(authorFont)}`
     ctx.fillText(`— ${state.author}`, centerX, canvas.height - 200)
   }
 }
@@ -369,6 +398,14 @@ function drawTextContent(ctx: CanvasRenderingContext2D, template: Template, stat
 function drawRegardCielText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, template: Template, state: CanvasState): void {
   const centerX = canvas.width / 2
   const bannerHeight = 100
+  
+  // Resolve custom fonts and sizes
+  const titleFont = resolveFont(template.titleFont, state.customFontFamily)
+  const quoteFont = resolveFont(template.quoteFont, state.customFontFamily)
+  const authorFont = resolveFont(template.authorFont, state.customFontFamily)
+  const titleSize = resolveSize(template.titleSize, state.fontSizeOffset)
+  const quoteSize = resolveSize(template.quoteSize, state.fontSizeOffset)
+  const authorSize = resolveSize(template.authorSize, state.fontSizeOffset)
   
   switch (template.frameStyle) {
     case 'regard-ciel':
@@ -379,7 +416,7 @@ function drawRegardCielText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEle
       // With name: Show saint name above the banner
       if (state.title) {
         ctx.fillStyle = '#ffffff'
-        ctx.font = `bold ${template.titleSize}px '${template.titleFont}', serif`
+        ctx.font = `bold ${titleSize}px ${fontFallback(titleFont)}`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
         
@@ -409,13 +446,13 @@ function drawRegardCielText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEle
       
       if (state.quote) {
         ctx.fillStyle = '#ffffff'
-        ctx.font = `italic ${template.quoteSize}px '${template.quoteFont}', serif`
-        wrapText(ctx, `"${state.quote}"`, centerX, canvas.height - bannerHeight - 120, 800, template.quoteSize * 1.3)
+        ctx.font = `italic ${quoteSize}px ${fontFallback(quoteFont)}`
+        wrapText(ctx, `"${state.quote}"`, centerX, canvas.height - bannerHeight - 120, 800, quoteSize * 1.3)
       }
       
       if (state.author) {
         ctx.fillStyle = '#ffd60a'
-        ctx.font = `bold ${template.authorSize}px '${template.authorFont}', sans-serif`
+        ctx.font = `bold ${authorSize}px ${fontFallback(authorFont)}`
         ctx.fillText(`— ${state.author}`, centerX, canvas.height - bannerHeight - 40)
       }
       
@@ -427,6 +464,12 @@ function drawRegardCielText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEle
 
 function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, template: Template, state: CanvasState): void {
   const centerX = canvas.width / 2
+  
+  // Resolve custom fonts
+  const titleFont = resolveFont('Playfair Display', state.customFontFamily)
+  const quoteFont = resolveFont(template.quoteFont, state.customFontFamily)
+  const refFont = resolveFont('Playfair Display', state.customFontFamily)
+  const sizeOffset = state.fontSizeOffset
   
   ctx.textAlign = 'center'
   ctx.textBaseline = 'top'
@@ -441,17 +484,20 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
   // EVANGILE-SIMPLE: Titre de la scène + Verset (référence)
   // ============================================================
   if (template.frameStyle === 'evangile-simple') {
+    const sTitleSize = resolveSize(32, sizeOffset)
+    const sRefSize = resolveSize(24, sizeOffset)
+    
     // Draw title
     if (state.title) {
       ctx.fillStyle = '#ffffff'
-      ctx.font = `bold 32px 'Playfair Display', serif`
+      ctx.font = `bold ${sTitleSize}px ${fontFallback(titleFont)}`
       ctx.fillText(state.title, centerX, canvas.height - 110)
     }
     
     // Draw reference (verset)
     if (state.author) {
       ctx.fillStyle = 'rgba(212, 175, 55, 1)'
-      ctx.font = `italic 24px 'Playfair Display', serif`
+      ctx.font = `italic ${sRefSize}px ${fontFallback(refFont)}`
       ctx.fillText(state.author, centerX, canvas.height - 60)
     }
     
@@ -484,8 +530,12 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
       verseLineHeight = 24
     }
     
+    // Apply size offset
+    verseFontSize = resolveSize(verseFontSize, sizeOffset)
+    verseLineHeight = Math.max(verseFontSize + 3, verseLineHeight + sizeOffset)
+    
     // Calculate text lines needed
-    ctx.font = `italic ${verseFontSize}px 'Playfair Display', serif`
+    ctx.font = `italic ${verseFontSize}px ${fontFallback(quoteFont)}`
     const words = text.split(' ')
     let line = ''
     let verseLineCount = 0
@@ -511,24 +561,27 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
     const verseStartY = verseEndY - verseTextHeight
     const titleY = verseStartY - 90 // More space between title and verse
     
+    const vTitleSize = resolveSize(24, sizeOffset)
+    const vRefSize = resolveSize(22, sizeOffset)
+    
     // Draw title (white, bold)
     if (state.title) {
       ctx.fillStyle = '#ffffff'
-      ctx.font = `bold 24px 'Playfair Display', serif`
+      ctx.font = `bold ${vTitleSize}px ${fontFallback(titleFont)}`
       ctx.fillText(state.title, centerX, titleY)
     }
     
     // Draw verse extract (white, italic)
     if (text) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
-      ctx.font = `italic ${verseFontSize}px 'Playfair Display', serif`
+      ctx.font = `italic ${verseFontSize}px ${fontFallback(quoteFont)}`
       wrapText(ctx, text, centerX, verseStartY, maxWidth, verseLineHeight)
     }
     
     // Draw reference (gold)
     if (state.author) {
       ctx.fillStyle = 'rgba(212, 175, 55, 1)'
-      ctx.font = `italic 22px 'Playfair Display', serif`
+      ctx.font = `italic ${vRefSize}px ${fontFallback(refFont)}`
       ctx.fillText(state.author, centerX, referenceY)
     }
     
@@ -578,24 +631,32 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
       lineHeight = 25
     }
     
+    // Apply size offset
+    fontSize = resolveSize(fontSize, sizeOffset)
+    lineHeight = Math.max(fontSize + 3, lineHeight + sizeOffset)
+    
+    const nTitleSize = resolveSize(22, sizeOffset)
+    const nRefSize = resolveSize(20, sizeOffset)
+    const bodyFont = resolveFont('Inter', state.customFontFamily)
+    
     // Draw title FIRST (white, bold) - at fixed top position
     if (state.title) {
       ctx.fillStyle = '#ffffff'
-      ctx.font = `bold 22px 'Playfair Display', serif`
+      ctx.font = `bold ${nTitleSize}px ${fontFallback(titleFont)}`
       ctx.fillText(state.title, centerX, titleY)
     }
     
     // Draw the full gospel text SECOND (white) - below title
     if (text) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.92)'
-      ctx.font = `${fontSize}px 'Inter', sans-serif`
+      ctx.font = `${fontSize}px ${fontFallback(bodyFont)}`
       wrapText(ctx, text, centerX, textStartY, maxWidth, lineHeight)
     }
     
     // Draw reference LAST (gold) - at fixed bottom position
     if (state.author) {
       ctx.fillStyle = 'rgba(212, 175, 55, 1)'
-      ctx.font = `italic 20px 'Playfair Display', serif`
+      ctx.font = `italic ${nRefSize}px ${fontFallback(refFont)}`
       ctx.fillText(state.author, centerX, canvas.height - 45)
     }
     

@@ -64,9 +64,20 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
     })
   }
 
-  // Get share text
+  // Get share text - different formatting per service type
   const getShareText = () => {
-    return `✨ ${title}\n\n"${quote}"\n\n${author ? `— ${author}` : ''}\n\n📸 Créé avec VDS Montage`
+    switch (type) {
+      case 'jour':
+        return `🌅 Pensée du Jour\n\n« ${quote} »\n\n${author ? `— ${author}` : ''}`
+      case 'saint':
+        return `✝️ Pensée de Saint\n\n« ${quote} »\n\n${author ? `— ${author}` : ''}`
+      case 'ciel':
+        return `🙏 #UnRegardAuCiel\n\n${title ? `${title}\n\n` : ''}${quote ? `« ${quote} »\n\n` : ''}${author ? `— ${author}` : ''}`
+      case 'evangile':
+        return `📖 L'Évangile Illustré\n\n${title ? `${title}\n\n` : ''}${quote ? `« ${quote} »\n\n` : ''}${author ? `— ${author}` : ''}`
+      default:
+        return `${title}\n\n« ${quote} »\n\n${author ? `— ${author}` : ''}`
+    }
   }
 
   // Export PNG (local download only)
@@ -96,7 +107,15 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
     
     try {
       const imageData = canvas.toDataURL('image/png', 1.0)
-      const caption = `📸 VDS Montage\n\n📝 ${title}\n\n"${quote.substring(0, 100)}${quote.length > 100 ? '...' : ''}"\n\n${author ? `— ${author}` : ''}`
+      // Telegram caption - just the service title, no "VDS Montage"
+      let serviceLabel = ''
+      switch (type) {
+        case 'jour': serviceLabel = '🌅 Pensée du Jour'; break
+        case 'saint': serviceLabel = '✝️ Pensée de Saint'; break
+        case 'ciel': serviceLabel = '🙏 #UnRegardAuCiel'; break
+        case 'evangile': serviceLabel = '📖 L\'Évangile Illustré'; break
+      }
+      const caption = `${serviceLabel}\n\n${title ? `${title}\n\n` : ''}${quote ? `« ${quote.substring(0, 150)}${quote.length > 150 ? '...' : ''} »\n\n` : ''}${author ? `— ${author}` : ''}`
       
       const response = await fetch('/api/telegram', {
         method: 'POST',
@@ -132,9 +151,15 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
 
       // Try Web Share API first (works on mobile)
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        const shareTitles: Record<string, string> = {
+          jour: 'Pensée du Jour',
+          saint: 'Pensée de Saint',
+          ciel: 'Un Regard au Ciel',
+          evangile: "L'Évangile Illustré",
+        }
         await navigator.share({
           files: [file],
-          title: 'VDS Montage',
+          title: shareTitles[type] || title,
           text: shareText,
         })
       } else {

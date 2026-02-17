@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display, Lora, Merriweather, Cinzel, Cormorant_Garamond, Dancing_Script, Libre_Baskerville } from 'next/font/google'
 import './globals.css'
 
@@ -44,6 +44,15 @@ const baskerville = Libre_Baskerville({
   subsets: ['latin'],
   variable: '--font-baskerville',
 })
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#1a1a2e',
+}
 
 export const metadata: Metadata = {
   title: 'VDS Montage - Créateur de Citations Inspirantes',

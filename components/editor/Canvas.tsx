@@ -128,7 +128,7 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
           height={CANVAS_SIZE}
           className="max-w-full max-h-full rounded-lg object-contain"
           style={{ 
-            maxHeight: 'calc(100vh - 140px)',
+            maxHeight: 'calc(100dvh - 140px)',
             maxWidth: 'calc(100vw - 16px)'
           }}
         />

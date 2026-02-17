@@ -13,9 +13,13 @@ export function LogoUploader() {
 
   // Load saved logo from localStorage on mount
   useEffect(() => {
-    const savedLogo = localStorage.getItem('vds-custom-logo')
-    if (savedLogo && !customLogo) {
-      setCustomLogo(savedLogo)
+    try {
+      const savedLogo = localStorage.getItem('vds-custom-logo')
+      if (savedLogo && !customLogo) {
+        setCustomLogo(savedLogo)
+      }
+    } catch {
+      // localStorage may be unavailable in private browsing
     }
   }, [customLogo, setCustomLogo])
 
@@ -33,7 +37,7 @@ export function LogoUploader() {
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string
         setCustomLogo(dataUrl)
-        localStorage.setItem('vds-custom-logo', dataUrl)
+        try { localStorage.setItem('vds-custom-logo', dataUrl) } catch { /* storage unavailable */ }
         setIsUploading(false)
       }
       reader.onerror = () => {
@@ -68,7 +72,7 @@ export function LogoUploader() {
 
   const handleRemoveLogo = () => {
     setCustomLogo(null)
-    localStorage.removeItem('vds-custom-logo')
+    try { localStorage.removeItem('vds-custom-logo') } catch { /* storage unavailable */ }
   }
 
   return (

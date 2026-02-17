@@ -152,8 +152,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
 // Initialize custom logo from localStorage (client-side only)
 if (typeof window !== 'undefined') {
-  const savedLogo = localStorage.getItem('vds-custom-logo')
-  if (savedLogo) {
-    useEditorStore.getState().setCustomLogo(savedLogo)
+  try {
+    const savedLogo = localStorage.getItem('vds-custom-logo')
+    if (savedLogo) {
+      useEditorStore.getState().setCustomLogo(savedLogo)
+    }
+  } catch (e) {
+    // localStorage may be unavailable in private browsing or restricted contexts
+    console.warn('Unable to access localStorage:', e)
   }
 }

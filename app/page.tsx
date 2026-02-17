@@ -27,7 +27,7 @@ export default function Home() {
   ]
 
   return (
-    <main className="h-screen flex flex-col overflow-hidden p-2 md:p-3">
+    <main className="h-dvh flex flex-col overflow-hidden p-2 md:p-3">
       {/* DESKTOP LAYOUT */}
       <div className="hidden lg:flex flex-1 gap-3 min-h-0">
         {/* Left sidebar - Scrollable */}

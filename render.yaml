@@ -3,7 +3,8 @@ services:
     name: vds-montage
     runtime: node
     buildCommand: npm install && npm run build
-    startCommand: npm run start
+    startCommand: npm run start -- -p $PORT
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production

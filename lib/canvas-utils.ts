@@ -1,5 +1,20 @@
 import { Template, FrameStyle } from './templates'
-import { loadImage, wrapText, hexToRgb } from './utils'
+import { loadImage, wrapText, wrapTextFromTop, hexToRgb } from './utils'
+
+// ─── Format support ─────────────────────────────────────────────────────────
+export type CanvasFormat = '1:1' | '16:9' | '9:16'
+
+export const CANVAS_DIMENSIONS: Record<CanvasFormat, { width: number; height: number }> = {
+  '1:1': { width: 1024, height: 1024 },
+  '16:9': { width: 1024, height: 576 },
+  '9:16': { width: 576, height: 1024 },
+}
+
+// Scale a base value (designed for 1024 min-dim) to the current canvas
+function scaleMin(base: number, canvas: HTMLCanvasElement): number {
+  return Math.round(base * Math.min(canvas.width, canvas.height) / 1024)
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 export interface CanvasState {
   title: string
@@ -135,31 +150,29 @@ function drawFrame(ctx: CanvasRenderingContext2D, template: Template, state: Can
 }
 
 function drawCircularFrame(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
+  const r1 = scaleMin(400, canvas)
+  const r2 = scaleMin(420, canvas)
   ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, 400, 0, Math.PI * 2)
+  ctx.arc(canvas.width / 2, canvas.height / 2, r1, 0, Math.PI * 2)
   ctx.stroke()
-  
-  // Additional decorative circle
+
   ctx.lineWidth = 4
   ctx.beginPath()
-  ctx.arc(canvas.width / 2, canvas.height / 2, 420, 0, Math.PI * 2)
+  ctx.arc(canvas.width / 2, canvas.height / 2, r2, 0, Math.PI * 2)
   ctx.stroke()
 }
 
 function drawGeometricFrame(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: CanvasState): void {
-  const margin = 60
+  const margin = scaleMin(60, canvas)
   const logo = getLogoPosition(canvas)
-  
-  // Draw frame with cutout for logo
+
   drawFrameWithLogoCutout(ctx, canvas, margin, logo, state.frameColor)
-  
-  // Corner decorations (skip bottom-right which is near logo)
-  const cornerSize = 40
+
+  const cornerSize = scaleMin(40, canvas)
   ctx.lineWidth = 6
   drawCornerDecoration(ctx, margin, margin, cornerSize)
   drawCornerDecoration(ctx, canvas.width - margin, margin, cornerSize, true)
   drawCornerDecoration(ctx, margin, canvas.height - margin, cornerSize, false, true)
-  // Bottom-right corner omitted to avoid logo overlap
 }
 
 function drawCornerDecoration(
@@ -241,31 +254,26 @@ function drawFrameWithLogoCutout(
 }
 
 function drawOrnateFrame(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, state: CanvasState): void {
-  const margin = 50
+  const margin = scaleMin(50, canvas)
   const logo = getLogoPosition(canvas)
-  
-  // Outer frame with cutout
+
   ctx.lineWidth = 10
   drawFrameWithLogoCutout(ctx, canvas, margin, logo, state.frameColor)
-  
-  // Inner frame with cutout
+
   ctx.lineWidth = 4
-  drawFrameWithLogoCutout(ctx, canvas, margin + 20, logo, state.frameColor)
-  
-  // Draw decorative corners (skip bottom-right near logo)
+  drawFrameWithLogoCutout(ctx, canvas, margin + scaleMin(20, canvas), logo, state.frameColor)
+
   const cornerPositions = [
     { x: margin, y: margin },
     { x: canvas.width - margin, y: margin },
     { x: margin, y: canvas.height - margin },
-    // Bottom-right omitted
   ]
-
   cornerPositions.forEach(pos => {
     ctx.save()
     ctx.translate(pos.x, pos.y)
     ctx.fillStyle = state.frameColor
     ctx.beginPath()
-    ctx.arc(0, 0, 8, 0, Math.PI * 2)
+    ctx.arc(0, 0, scaleMin(8, canvas), 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
   })
@@ -274,75 +282,125 @@ function drawOrnateFrame(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
 function drawSacredGeometryFrame(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
   const centerX = canvas.width / 2
   const centerY = canvas.height / 2
-  
+  const r = scaleMin(380, canvas)
+
   ctx.lineWidth = 6
-  
-  // Draw diamond shape
   ctx.beginPath()
-  ctx.moveTo(centerX, centerY - 380)
-  ctx.lineTo(centerX + 380, centerY)
-  ctx.lineTo(centerX, centerY + 380)
-  ctx.lineTo(centerX - 380, centerY)
+  ctx.moveTo(centerX, centerY - r)
+  ctx.lineTo(centerX + r, centerY)
+  ctx.lineTo(centerX, centerY + r)
+  ctx.lineTo(centerX - r, centerY)
   ctx.closePath()
   ctx.stroke()
 }
 
 function drawElegantFrame(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement): void {
-  const margin = 70
+  const margin = scaleMin(70, canvas)
   const logo = getLogoPosition(canvas)
   const frameColor = ctx.strokeStyle as string
-  
-  // Main frame with cutout
+
   ctx.lineWidth = 6
   drawFrameWithLogoCutout(ctx, canvas, margin, logo, frameColor)
-  
-  // Inner accent line with cutout
+
   ctx.lineWidth = 2
   ctx.globalAlpha = 0.6
-  drawFrameWithLogoCutout(ctx, canvas, margin + 15, logo, frameColor)
+  drawFrameWithLogoCutout(ctx, canvas, margin + scaleMin(15, canvas), logo, frameColor)
   ctx.globalAlpha = 1.0
 }
 
 // "Un Regard au Ciel" frame style - green banner at bottom with yellow hashtag
 function drawRegardCielFrame(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, style: string): void {
-  const bannerHeight = 100
+  const bannerHeight = Math.max(60, scaleMin(100, canvas))
   const bannerY = canvas.height - bannerHeight
-  
-  // Draw green banner at bottom
+
   ctx.fillStyle = '#2d6a4f'
   ctx.fillRect(0, bannerY, canvas.width, bannerHeight)
-  
-  // Draw hashtag in yellow italic
+
   ctx.fillStyle = '#ffd60a'
-  ctx.font = 'italic bold 52px Playfair Display, serif'
+  ctx.font = `italic bold ${scaleMin(52, canvas)}px Playfair Display, serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText('#UnRegardAuCiel', canvas.width / 2, bannerY + bannerHeight / 2)
 }
 
 function drawEvangileFrame(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, style: string): void {
-  // Draw a warm brown/sepia banner at bottom with gradient
-  // Height varies based on style
-  let gradientStart: number
-  
+  const isLandscape = canvas.width > canvas.height
+
   if (style === 'evangile-narratif') {
-    // For narrative, gradient covers more of the image (up to 50%)
-    gradientStart = canvas.height * 0.45
+    // Pour le format 16:9, on utilise un ratio plus généreux pour l'image
+    const solidRatio = isLandscape ? 0.48 : 0.44
+    const gradRatio  = isLandscape ? 0.32 : 0.30
+
+    const solidStart = Math.floor(canvas.height * solidRatio)
+    const gradStart  = Math.floor(canvas.height * gradRatio)
+
+    // Fond solide pour la zone de texte
+    ctx.fillStyle = 'rgba(8, 6, 3, 0.92)'
+    ctx.fillRect(0, solidStart, canvas.width, canvas.height - solidStart)
+
+    // Gradient de transition
+    const grad = ctx.createLinearGradient(0, gradStart, 0, solidStart)
+    grad.addColorStop(0, 'rgba(0, 0, 0, 0)')
+    grad.addColorStop(1, 'rgba(8, 6, 3, 0.92)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, gradStart, canvas.width, solidStart - gradStart)
+
+    // Ligne décorative dorée à la jonction image / texte
+    _drawEvangileSeparator(ctx, canvas, solidStart)
+
   } else if (style === 'evangile-verset') {
-    gradientStart = canvas.height * 0.65
+    const solidRatio = isLandscape ? 0.54 : 0.58
+    const gradRatio  = isLandscape ? 0.38 : 0.46
+
+    const solidStart = Math.floor(canvas.height * solidRatio)
+    const gradStart  = Math.floor(canvas.height * gradRatio)
+
+    ctx.fillStyle = 'rgba(8, 6, 3, 0.90)'
+    ctx.fillRect(0, solidStart, canvas.width, canvas.height - solidStart)
+
+    const grad = ctx.createLinearGradient(0, gradStart, 0, solidStart)
+    grad.addColorStop(0, 'rgba(0, 0, 0, 0)')
+    grad.addColorStop(1, 'rgba(8, 6, 3, 0.90)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, gradStart, canvas.width, solidStart - gradStart)
+
+    // Ligne décorative dorée
+    _drawEvangileSeparator(ctx, canvas, solidStart)
+
   } else {
-    gradientStart = canvas.height * 0.75
+    // evangile-simple : gradient du bas
+    const gradStart = Math.floor(canvas.height * 0.72)
+    const grad = ctx.createLinearGradient(0, gradStart, 0, canvas.height)
+    grad.addColorStop(0, 'rgba(0, 0, 0, 0)')
+    grad.addColorStop(0.3, 'rgba(10, 8, 5, 0.65)')
+    grad.addColorStop(0.65, 'rgba(10, 8, 5, 0.88)')
+    grad.addColorStop(1, 'rgba(8, 6, 3, 0.97)')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, gradStart, canvas.width, canvas.height - gradStart)
   }
-  
-  // Create gradient for cinematic effect
-  const gradient = ctx.createLinearGradient(0, gradientStart, 0, canvas.height)
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0)')
-  gradient.addColorStop(0.2, 'rgba(10, 8, 5, 0.5)')
-  gradient.addColorStop(0.5, 'rgba(15, 12, 8, 0.8)')
-  gradient.addColorStop(1, 'rgba(10, 8, 5, 0.95)')
-  
-  ctx.fillStyle = gradient
-  ctx.fillRect(0, gradientStart, canvas.width, canvas.height - gradientStart)
+}
+
+// Ligne décorative dorée à la jonction image / zone de texte
+function _drawEvangileSeparator(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, y: number): void {
+  const padH = canvas.width * 0.06
+  ctx.save()
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.55)'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(padH, y)
+  ctx.lineTo(canvas.width - padH, y)
+  ctx.stroke()
+  // Petit losange centré sur la ligne
+  const d = scaleMin(6, canvas)
+  ctx.fillStyle = 'rgba(212, 175, 55, 0.70)'
+  ctx.beginPath()
+  ctx.moveTo(canvas.width / 2, y - d)
+  ctx.lineTo(canvas.width / 2 + d, y)
+  ctx.lineTo(canvas.width / 2, y + d)
+  ctx.lineTo(canvas.width / 2 - d, y)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
 }
 
 function drawTextContent(ctx: CanvasRenderingContext2D, template: Template, state: CanvasState): void {
@@ -367,7 +425,6 @@ function drawTextContent(ctx: CanvasRenderingContext2D, template: Template, stat
   const centerX = canvas.width / 2
   const centerY = canvas.height / 2
 
-  // Resolve custom fonts and sizes
   const titleFont = resolveFont(template.titleFont, state.customFontFamily)
   const quoteFont = resolveFont(template.quoteFont, state.customFontFamily)
   const authorFont = resolveFont(template.authorFont, state.customFontFamily)
@@ -375,23 +432,36 @@ function drawTextContent(ctx: CanvasRenderingContext2D, template: Template, stat
   const quoteSize = resolveSize(template.quoteSize, state.fontSizeOffset)
   const authorSize = resolveSize(template.authorSize, state.fontSizeOffset)
 
-  // Draw title
+  // Title — proportional Y position
+  const titleY    = Math.round(canvas.height * 0.195)
+  const decorLineY = Math.round(canvas.height * 0.234)
+  const decorLineW = Math.round(canvas.width  * 0.195)
+
   ctx.font = `${titleSize}px ${fontFallback(titleFont)}`
-  ctx.fillText(state.title, centerX, 200)
+  ctx.fillText(state.title, centerX, titleY)
 
-  // Draw decorative line under title
   ctx.fillStyle = state.frameColor
-  ctx.fillRect(centerX - 100, 240, 200, 3)
+  ctx.fillRect(centerX - decorLineW / 2, decorLineY, decorLineW, 3)
 
-  // Draw quote (with text wrapping)
   ctx.fillStyle = state.textColor
   ctx.font = `${quoteSize}px ${fontFallback(quoteFont)}`
-  wrapText(ctx, state.quote, centerX, centerY, 700, quoteSize * 1.4)
+  wrapText(ctx, state.quote, centerX, centerY, Math.round(canvas.width * 0.68), quoteSize * 1.4)
 
-  // Draw author
   if (state.author) {
+    let authorY: number
+
+    if (template.frameStyle === 'circular') {
+      // L'auteur doit être DANS le cercle, juste au-dessus de son bord inférieur.
+      // Rayon du cercle interne (identique à drawCircularFrame) = scaleMin(400, canvas).
+      const r = scaleMin(400, canvas)
+      // Position : centre + rayon - (hauteur texte + marge)
+      authorY = centerY + r - authorSize - scaleMin(18, canvas)
+    } else {
+      authorY = canvas.height - Math.round(canvas.height * 0.195)
+    }
+
     ctx.font = `italic ${authorSize}px ${fontFallback(authorFont)}`
-    ctx.fillText(`— ${state.author}`, centerX, canvas.height - 200)
+    ctx.fillText(`— ${state.author}`, centerX, authorY)
   }
 }
 
@@ -447,7 +517,7 @@ function drawRegardCielText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEle
       if (state.quote) {
         ctx.fillStyle = '#ffffff'
         ctx.font = `italic ${quoteSize}px ${fontFallback(quoteFont)}`
-        wrapText(ctx, `"${state.quote}"`, centerX, canvas.height - bannerHeight - 120, 800, quoteSize * 1.3)
+        wrapText(ctx, `"${state.quote}"`, centerX, canvas.height - bannerHeight - 120, Math.round(canvas.width * 0.78), quoteSize * 1.3)
       }
       
       if (state.author) {
@@ -487,11 +557,14 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
     const sTitleSize = resolveSize(32, sizeOffset)
     const sRefSize = resolveSize(24, sizeOffset)
     
-    // Draw title
+    // Draw title (wrappé)
     if (state.title) {
       ctx.fillStyle = '#ffffff'
       ctx.font = `bold ${sTitleSize}px ${fontFallback(titleFont)}`
-      ctx.fillText(state.title, centerX, canvas.height - 110)
+      const sMaxWidth = Math.round(canvas.width * 0.90)
+      const sTitleLH  = Math.round(sTitleSize * 1.3)
+      const sTitleY   = canvas.height - Math.max(90, scaleMin(130, canvas))
+      wrapTextFromTop(ctx, state.title, centerX, sTitleY, sMaxWidth, sTitleLH)
     }
     
     // Draw reference (verset)
@@ -514,20 +587,20 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
     const text = state.quote || ''
     const textLength = text.length
     
-    // Dynamic font size based on verse length
-    let verseFontSize = 18
-    let verseLineHeight = 26
-    let maxWidth = 900
-    
+    // Taille de police dynamique — minimum 17px pour rester lisible
+    let verseFontSize = 22
+    let verseLineHeight = 30
+    const maxWidth = Math.round(canvas.width * 0.88)
+
     if (textLength > 300) {
-      verseFontSize = 15
-      verseLineHeight = 21
-    } else if (textLength > 200) {
-      verseFontSize = 16
-      verseLineHeight = 23
-    } else if (textLength > 100) {
       verseFontSize = 17
       verseLineHeight = 24
+    } else if (textLength > 200) {
+      verseFontSize = 19
+      verseLineHeight = 26
+    } else if (textLength > 100) {
+      verseFontSize = 21
+      verseLineHeight = 28
     }
     
     // Apply size offset
@@ -554,21 +627,21 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
     
     const verseTextHeight = verseLineCount * verseLineHeight
     
-    // Position from bottom up
-    const bottomMargin = 55
-    const referenceY = canvas.height - bottomMargin
-    const verseEndY = referenceY - 40 // Space between verse and reference
+    // Position from bottom up — valeurs scalées selon la dimension min
+    const bottomMargin = Math.max(40, scaleMin(55, canvas))
+    const referenceY  = canvas.height - bottomMargin
+    const verseEndY   = referenceY - Math.max(28, scaleMin(40, canvas))
     const verseStartY = verseEndY - verseTextHeight
-    const titleY = verseStartY - 90 // More space between title and verse
+    const titleY      = verseStartY - Math.max(55, scaleMin(90, canvas))
     
-    const vTitleSize = resolveSize(24, sizeOffset)
+    const vTitleSize = resolveSize(28, sizeOffset)
     const vRefSize = resolveSize(22, sizeOffset)
     
-    // Draw title (white, bold)
+    // Draw title (white, bold — wrappé pour éviter le débordement)
     if (state.title) {
       ctx.fillStyle = '#ffffff'
       ctx.font = `bold ${vTitleSize}px ${fontFallback(titleFont)}`
-      ctx.fillText(state.title, centerX, titleY)
+      wrapTextFromTop(ctx, state.title, centerX, titleY, maxWidth, Math.round(vTitleSize * 1.35))
     }
     
     // Draw verse extract (white, italic)
@@ -591,77 +664,114 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
   }
   
   // ============================================================
-  // EVANGILE-NARRATIF: Titre + Texte complet + Verset (référence)
-  // Simple top-down layout: Title at fixed position, then text, then reference
+  // EVANGILE-NARRATIF: layout top-down strict, avec clipping
+  // Titre → Corps (clippé) → Référence fixe en bas
   // ============================================================
   if (template.frameStyle === 'evangile-narratif') {
     const text = state.quote || ''
     const textLength = text.length
-    
-    // FIXED POSITIONS - Simple and predictable
-    const titleY = canvas.height * 0.38 // Title at 38% from top
-    const textStartY = canvas.height * 0.46 // Text starts at 46% from top
-    const referenceY = canvas.height - 50 // Reference at bottom
-    
-    // Dynamic font size based on text length
-    let fontSize: number
-    let lineHeight: number
-    let maxWidth = 950
-    
-    if (textLength > 1200) {
-      fontSize = 11
-      lineHeight = 15
-    } else if (textLength > 1000) {
-      fontSize = 12
-      lineHeight = 16
-    } else if (textLength > 800) {
-      fontSize = 13
-      lineHeight = 17
-    } else if (textLength > 600) {
-      fontSize = 14
-      lineHeight = 19
-    } else if (textLength > 400) {
-      fontSize = 15
-      lineHeight = 21
-    } else if (textLength > 200) {
-      fontSize = 16
-      lineHeight = 23
-    } else {
-      fontSize = 17
-      lineHeight = 25
-    }
-    
-    // Apply size offset
-    fontSize = resolveSize(fontSize, sizeOffset)
-    lineHeight = Math.max(fontSize + 3, lineHeight + sizeOffset)
-    
-    const nTitleSize = resolveSize(22, sizeOffset)
-    const nRefSize = resolveSize(20, sizeOffset)
-    const bodyFont = resolveFont('Inter', state.customFontFamily)
-    
-    // Draw title FIRST (white, bold) - at fixed top position
+    const isLandscape = canvas.width > canvas.height
+
+    const solidRatio  = isLandscape ? 0.48 : 0.44
+    const maxWidth    = Math.round(canvas.width * 0.90)
+    const padTop      = Math.max(14, scaleMin(20, canvas))
+    const padBottom   = Math.max(10, scaleMin(14, canvas))
+    const refHeight   = resolveSize(22, sizeOffset) * 1.6
+    const referenceY  = canvas.height - Math.max(40, scaleMin(50, canvas))
+    // Limite basse pour le corps du texte (laisse de la place à la référence)
+    const bodyBottomY = referenceY - refHeight - padBottom
+
+    // Point de départ dans la zone solide
+    let currentY = Math.floor(canvas.height * solidRatio) + padTop
+
+    ctx.save()
+    ctx.textAlign    = 'center'
+    ctx.textBaseline = 'top'
+    ctx.shadowColor  = 'rgba(0, 0, 0, 1)'
+    ctx.shadowBlur   = 12
+    ctx.shadowOffsetX = 2
+    ctx.shadowOffsetY = 2
+
+    // ── Titre (wrappé, taille fixe) ──────────────────────────────
+    const nTitleSize = resolveSize(26, sizeOffset)
+    const titleLH    = Math.round(nTitleSize * 1.35)
+    const nRefSize   = resolveSize(22, sizeOffset)
+    const bodyFont   = resolveFont('Inter', state.customFontFamily)
+
     if (state.title) {
       ctx.fillStyle = '#ffffff'
       ctx.font = `bold ${nTitleSize}px ${fontFallback(titleFont)}`
-      ctx.fillText(state.title, centerX, titleY)
+      currentY = wrapTextFromTop(ctx, state.title, centerX, currentY, maxWidth, titleLH)
+      // Fine ligne dorée sous le titre
+      ctx.save()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur  = 0
+      ctx.fillStyle   = 'rgba(212, 175, 55, 0.6)'
+      const lineW = Math.round(canvas.width * 0.40)
+      ctx.fillRect(centerX - lineW / 2, currentY + 6, lineW, 1)
+      ctx.restore()
+      currentY += Math.max(14, scaleMin(20, canvas))
     }
-    
-    // Draw the full gospel text SECOND (white) - below title
-    if (text) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)'
+
+    // ── Corps du texte — clippé pour ne jamais dépasser bodyBottomY ──
+    if (text && currentY < bodyBottomY) {
+      let fontSize: number
+      let lineHeight: number
+
+      if (textLength > 1200) {
+        fontSize = 14; lineHeight = 20
+      } else if (textLength > 1000) {
+        fontSize = 15; lineHeight = 21
+      } else if (textLength > 800) {
+        fontSize = 16; lineHeight = 22
+      } else if (textLength > 600) {
+        fontSize = 17; lineHeight = 24
+      } else if (textLength > 400) {
+        fontSize = 18; lineHeight = 26
+      } else if (textLength > 200) {
+        fontSize = 20; lineHeight = 28
+      } else {
+        fontSize = 22; lineHeight = 30
+      }
+
+      fontSize   = resolveSize(fontSize, sizeOffset)
+      lineHeight = Math.max(fontSize + 4, lineHeight + sizeOffset)
+
+      // Réduire fontSize si le texte ne tiendrait pas dans l'espace dispo
+      const availableHeight = bodyBottomY - currentY
+      const estimatedLines  = Math.ceil(textLength / Math.floor(maxWidth / (fontSize * 0.6)))
+      const estimatedHeight = estimatedLines * lineHeight
+      if (estimatedHeight > availableHeight && estimatedLines > 0) {
+        const ratio = availableHeight / estimatedHeight
+        fontSize   = Math.max(11, Math.floor(fontSize * ratio))
+        lineHeight = Math.max(fontSize + 3, Math.floor(lineHeight * ratio))
+      }
+
+      // Clipper le canvas pour que le texte ne sorte pas de la zone allouée
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(0, currentY, canvas.width, bodyBottomY - currentY)
+      ctx.clip()
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.94)'
       ctx.font = `${fontSize}px ${fontFallback(bodyFont)}`
-      wrapText(ctx, text, centerX, textStartY, maxWidth, lineHeight)
+      wrapTextFromTop(ctx, text, centerX, currentY, maxWidth, lineHeight)
+
+      ctx.restore()
     }
-    
-    // Draw reference LAST (gold) - at fixed bottom position
+
+    // ── Référence dorée — position fixe en bas ────────────────────
     if (state.author) {
+      ctx.shadowColor  = 'rgba(0, 0, 0, 0.9)'
+      ctx.shadowBlur   = 8
+      ctx.shadowOffsetX = 1
+      ctx.shadowOffsetY = 1
       ctx.fillStyle = 'rgba(212, 175, 55, 1)'
       ctx.font = `italic ${nRefSize}px ${fontFallback(refFont)}`
-      ctx.fillText(state.author, centerX, canvas.height - 45)
+      ctx.fillText(state.author, centerX, referenceY)
     }
-    
-    ctx.shadowColor = 'transparent'
-    ctx.shadowBlur = 0
+
+    ctx.restore()
     return
   }
 }
@@ -669,43 +779,46 @@ function drawEvangileText(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
 // Default VDS logo path
 const DEFAULT_LOGO_PATH = '/images/logo-vds.png'
 
-// Logo configuration - shared between logo and frame functions
-const LOGO_CONFIG = {
-  size: 80,           // Logo size in pixels (circular shape)
-  marginRight: 90,    // Distance from right edge
-  marginBottom: 70,   // Distance from bottom edge
-  shadowBlur: 15,     // White glow for visibility
-  shadowColor: 'rgba(255, 255, 255, 0.8)',
-  cutoutPadding: 15,  // Extra space around logo for frame cutout
+// Logo configuration — scales with canvas min-dimension
+function getLogoConfig(canvas: HTMLCanvasElement) {
+  const s = Math.min(canvas.width, canvas.height) / 1024
+  return {
+    size: Math.round(80 * s),
+    marginRight: Math.round(90 * s),
+    marginBottom: Math.round(70 * s),
+    shadowBlur: 15,
+    shadowColor: 'rgba(255, 255, 255, 0.8)' as const,
+    cutoutPadding: Math.round(15 * s),
+  }
 }
 
 // Get logo position (used by both logo and frame functions)
 function getLogoPosition(canvas: HTMLCanvasElement) {
+  const cfg = getLogoConfig(canvas)
   return {
-    x: canvas.width - LOGO_CONFIG.marginRight,
-    y: canvas.height - LOGO_CONFIG.marginBottom,
-    size: LOGO_CONFIG.size,
-    radius: LOGO_CONFIG.size / 2 + LOGO_CONFIG.cutoutPadding,
+    x: canvas.width - cfg.marginRight,
+    y: canvas.height - cfg.marginBottom,
+    size: cfg.size,
+    radius: cfg.size / 2 + cfg.cutoutPadding,
   }
 }
 
 async function drawLogo(ctx: CanvasRenderingContext2D, state: CanvasState): Promise<void> {
   const canvas = ctx.canvas
-  const logoX = canvas.width - LOGO_CONFIG.marginRight
-  const logoY = canvas.height - LOGO_CONFIG.marginBottom
-  const logoSize = LOGO_CONFIG.size
+  const cfg = getLogoConfig(canvas)
+  const logoX = canvas.width - cfg.marginRight
+  const logoY = canvas.height - cfg.marginBottom
+  const logoSize = cfg.size
 
   ctx.save()
 
-  // Determine which logo to use
   const logoUrl = state.customLogo || DEFAULT_LOGO_PATH
 
   try {
     const logoImg = await loadImage(logoUrl)
     
-    // Add white glow/shadow for visibility on dark backgrounds
-    ctx.shadowColor = LOGO_CONFIG.shadowColor
-    ctx.shadowBlur = LOGO_CONFIG.shadowBlur
+    ctx.shadowColor = cfg.shadowColor
+    ctx.shadowBlur = cfg.shadowBlur
     ctx.shadowOffsetX = 0
     ctx.shadowOffsetY = 0
     
@@ -748,11 +861,11 @@ function drawFallbackLogo(
   ctx.fillText('VDS', x, y)
 }
 
-// Draw logo for "Un Regard au Ciel" style - top right with "VIE DES SAINTS" text
+// Draw logo for "Un Regard au Ciel" style - top right
 async function drawRegardCielLogo(ctx: CanvasRenderingContext2D, state: CanvasState): Promise<void> {
   const canvas = ctx.canvas
-  const logoSize = 70
-  const margin = 30
+  const logoSize = scaleMin(70, canvas)
+  const margin = scaleMin(30, canvas)
   const logoX = canvas.width - margin - logoSize / 2
   const logoY = margin + logoSize / 2
   

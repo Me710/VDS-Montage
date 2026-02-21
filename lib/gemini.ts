@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai'
 
 export type ContentType = 'jour' | 'saint' | 'ciel' | 'evangile'
 
-function getImagePrompt(type: ContentType, style: string): string {
+function getImagePrompt(type: ContentType, style: string, evangelContext?: string): string {
   switch (type) {
     case 'jour':
       return `Create a photorealistic beautiful serene ${style} landscape photograph for an inspirational quote background. Natural scenery with soft golden hour lighting. Mountains, ocean, forest, or meadow. High quality, peaceful atmosphere. Professional photography, cinematic lighting. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks.`
@@ -58,8 +58,15 @@ function getImagePrompt(type: ContentType, style: string): string {
       ]
       const randomSubject = subjects[Math.floor(Math.random() * subjects.length)]
       return `Create an accurate Catholic religious image: ${randomSubject}. IMPORTANT: Be faithful to traditional Catholic iconography and symbolism. Do not invent or modify traditional attributes. Style: classical Renaissance or Baroque devotional art, warm golden divine lighting, reverent sacred atmosphere. High quality painting style. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks.`
-    case 'evangile':
-      // Cinematic biblical style - faceless stylized figures - EXPANDED variety
+    case 'evangile': {
+      const evangelCinematicStyle = `Cinematic lighting, soft volumetric sun rays, gentle dust particles floating in the air, shallow depth of field. The mood is peaceful, sacred, timeless, and contemplative, evoking biblical symbolism, humility, guidance, and divine calm. Ultra-high quality, cinematic composition, modern 3D realism with symbolic minimalism, no facial features, physically based rendering, global illumination, soft shadows. Color palette: warm golds, soft greens, beige, earthy browns, natural light. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks, no logos.`
+
+      // Si un contexte est fourni (titre de l'évangile du jour), générer une scène pertinente
+      if (evangelContext && evangelContext.trim().length > 0) {
+        return `Cinematic biblical scene visually inspired by the Gospel passage titled: "${evangelContext}". Depict the key moment or setting of this passage with faceless stylized human figures with smooth marble-like skin, wearing ancient Middle Eastern clothing (simple robes, tunics, head coverings). Ancient Palestinian landscape — stone paths, olive trees, hills of Galilee, or shores of the Sea of Galilee as appropriate. ${evangelCinematicStyle}`
+      }
+
+      // Sinon, scène aléatoire
       const evangelScenes = [
         // The Good Shepherd - Psalm 23 / John 10
         'A serene biblical shepherd scene at golden hour, faceless stylized human figure with smooth marble-like skin, wearing ancient Middle Eastern shepherd clothing (simple brown robe, white head covering), holding a wooden staff, guiding a small flock of sheep across a sun-lit Mediterranean landscape with rolling hills, olive trees, warm earth tones',
@@ -122,18 +129,19 @@ function getImagePrompt(type: ContentType, style: string): string {
         'Three faceless figures walking on a dusty road at sunset, one in white robes, rolling hills landscape, warm golden light, sense of revelation and companionship'
       ]
       const randomEvangelScene = evangelScenes[Math.floor(Math.random() * evangelScenes.length)]
-      return `${randomEvangelScene}. Cinematic lighting, soft volumetric sun rays, gentle dust particles floating in the air, shallow depth of field. The mood is peaceful, sacred, timeless, and contemplative, evoking biblical symbolism, humility, guidance, and divine calm. Ultra-high quality, cinematic composition, modern 3D realism with symbolic minimalism, no facial features, physically based rendering, global illumination, soft shadows. Color palette: warm golds, soft greens, beige, earthy browns, natural light. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks, no logos.`
+      return `${randomEvangelScene}. ${evangelCinematicStyle}`
+    }
   }
 }
 
 // Generate image using Google Gemini with native image generation
-export async function generateImageWithGemini(type: ContentType, style: string): Promise<string> {
+export async function generateImageWithGemini(type: ContentType, style: string, evangelContext?: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not configured')
   }
   
-  const prompt = getImagePrompt(type, style)
+  const prompt = getImagePrompt(type, style, evangelContext)
 
   const ai = new GoogleGenAI({ apiKey })
 

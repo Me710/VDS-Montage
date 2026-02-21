@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 import { templates, type TemplateType, type Template } from './templates'
+import { type CanvasFormat } from './canvas-utils'
+
+export type { CanvasFormat }
 
 export const AVAILABLE_FONTS = [
   { value: '', label: 'Par défaut (template)' },
@@ -34,6 +37,9 @@ export interface EditorState {
   // Font customization
   customFontFamily: string  // '' means use template default
   fontSizeOffset: number    // -20 to +20, adjusts all font sizes
+
+  // Canvas format
+  canvasFormat: CanvasFormat
   
   // AI Generation state
   isGenerating: boolean
@@ -43,6 +49,7 @@ export interface EditorState {
   // Actions
   setType: (type: TemplateType) => void
   setTemplateIndex: (index: number) => void
+  setCanvasFormat: (format: CanvasFormat) => void
   setTitle: (title: string) => void
   setQuote: (quote: string) => void
   setAuthor: (author: string) => void
@@ -81,6 +88,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   overlayOpacity: 50,
   customFontFamily: '',
   fontSizeOffset: 0,
+  canvasFormat: '1:1',
   isGenerating: false,
   generatingText: false,
   generatingImage: false,
@@ -114,6 +122,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   }),
   
   setTemplateIndex: (templateIndex) => set({ templateIndex }),
+  setCanvasFormat: (canvasFormat) => set({ canvasFormat }),
   setTitle: (title) => set({ title }),
   setQuote: (quote) => set({ quote }),
   setAuthor: (author) => set({ author }),

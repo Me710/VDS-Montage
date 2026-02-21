@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const type = body.type as ContentType
     const style = body.style as string || 'beautiful'
+    const context = body.context as string | undefined
 
     if (!type || !['jour', 'saint', 'ciel', 'evangile'].includes(type)) {
       return NextResponse.json(
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const imageUrl = await generateImageWithGemini(type, style)
+    const imageUrl = await generateImageWithGemini(type, style, context)
 
     return NextResponse.json({ imageUrl })
   } catch (error) {

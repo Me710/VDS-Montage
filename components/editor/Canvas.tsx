@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, forwardRef, useRef, useState } from 'react'
 import { useEditorStore } from '@/lib/store'
-import { renderCanvas, CANVAS_SIZE } from '@/lib/canvas-utils'
+import { renderCanvas, CANVAS_DIMENSIONS } from '@/lib/canvas-utils'
 import { Loader2 } from 'lucide-react'
 
 export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalRef) {
@@ -26,9 +26,12 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
     overlayOpacity,
     customFontFamily,
     fontSizeOffset,
+    canvasFormat,
     isGenerating,
     getCurrentTemplate,
   } = useEditorStore()
+
+  const dims = CANVAS_DIMENSIONS[canvasFormat]
 
   // Mark canvas as ready after mount
   useEffect(() => {
@@ -86,6 +89,7 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
     overlayOpacity,
     customFontFamily,
     fontSizeOffset,
+    canvasFormat,
     getCurrentTemplate,
   ])
 
@@ -124,8 +128,8 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
       <div className="relative canvas-container p-1 md:p-1.5 flex items-center justify-center">
         <canvas
           ref={setRefs}
-          width={CANVAS_SIZE}
-          height={CANVAS_SIZE}
+          width={dims.width}
+          height={dims.height}
           className="max-w-full max-h-full rounded-lg object-contain"
           style={{ 
             maxHeight: 'calc(100dvh - 140px)',

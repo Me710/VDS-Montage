@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 export function AIGeneratePanel() {
   const {
     type,
+    title,
     generatingText,
     generatingImage,
     isGenerating,
@@ -56,10 +57,12 @@ export function AIGeneratePanel() {
 
     try {
       const template = getCurrentTemplate()
+      // Pour l'évangile, on passe le titre comme contexte pour une image pertinente
+      const context = type === 'evangile' && title && title !== "L'Évangile Illustré" ? title : undefined
       const response = await fetch('/api/generate/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, style: template.style }),
+        body: JSON.stringify({ type, style: template.style, context }),
       })
 
       if (!response.ok) {

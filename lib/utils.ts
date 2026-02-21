@@ -57,6 +57,40 @@ export function wrapText(
   })
 }
 
+/**
+ * Dessine du texte à partir de y vers le bas (textBaseline='top').
+ * Retourne la coordonnée Y du bas du dernier trait.
+ */
+export function wrapTextFromTop(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number
+): number {
+  const words = text.split(' ')
+  let line = ''
+  const lines: string[] = []
+
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + words[i] + ' '
+    if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+      lines.push(line.trim())
+      line = words[i] + ' '
+    } else {
+      line = testLine
+    }
+  }
+  if (line.trim()) lines.push(line.trim())
+
+  lines.forEach((l, i) => {
+    ctx.fillText(l, x, y + i * lineHeight)
+  })
+
+  return y + lines.length * lineHeight
+}
+
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const r = parseInt(hex.substr(1, 2), 16)
   const g = parseInt(hex.substr(3, 2), 16)

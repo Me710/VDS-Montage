@@ -8,7 +8,50 @@ import { AIGeneratePanel } from '@/components/ai/AIGeneratePanel'
 import { ImageGallery } from '@/components/gallery/ImageGallery'
 import { LogoUploader } from '@/components/gallery/LogoUploader'
 import { ShareButtons } from '@/components/share/ShareButtons'
+import { useEditorStore, type CanvasFormat } from '@/lib/store'
 import { Sparkles, Settings, Image, Wand2, Share2, ChevronDown, ChevronUp } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+// Icons for format buttons
+function IconSquare() {
+  return <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+}
+function IconLandscape() {
+  return <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4"><rect x="1" y="4" width="14" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+}
+function IconPortrait() {
+  return <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4"><rect x="4" y="1" width="8" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>
+}
+
+const FORMAT_OPTIONS: { id: CanvasFormat; label: string; icon: React.ReactNode }[] = [
+  { id: '1:1',  label: '1:1',  icon: <IconSquare /> },
+  { id: '16:9', label: '16:9', icon: <IconLandscape /> },
+  { id: '9:16', label: '9:16', icon: <IconPortrait /> },
+]
+
+function FormatSelector() {
+  const { canvasFormat, setCanvasFormat } = useEditorStore()
+  return (
+    <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5 border border-white/10">
+      {FORMAT_OPTIONS.map(f => (
+        <button
+          key={f.id}
+          onClick={() => setCanvasFormat(f.id)}
+          title={f.id}
+          className={cn(
+            'flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all',
+            canvasFormat === f.id
+              ? 'bg-primary text-dark'
+              : 'text-white/50 hover:text-white'
+          )}
+        >
+          {f.icon}
+          <span className="hidden sm:inline">{f.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
 
 // Mobile tab type
 type MobileTab = 'templates' | 'ai' | 'gallery' | 'controls' | 'share'
@@ -40,20 +83,23 @@ export default function Home() {
         {/* Center - Canvas with header */}
         <section className="flex-1 flex flex-col min-w-0">
           {/* Centered Header */}
-          <header className="flex-shrink-0 flex items-center justify-center gap-3 mb-3 py-2">
-            <img 
-              src="/images/logo-vds.png" 
-              alt="VDS Logo" 
-              className="w-10 h-10 object-contain"
-            />
-            <div className="text-center">
-              <h1 className="text-xl font-bold text-white leading-tight">VDS Montage</h1>
-              <p className="text-xs text-white/50">Créateur de citations</p>
+          <header className="flex-shrink-0 flex items-center justify-between gap-3 mb-3 py-2">
+            <div className="flex items-center gap-3">
+              <img 
+                src="/images/logo-vds.png" 
+                alt="VDS Logo" 
+                className="w-10 h-10 object-contain"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-white leading-tight">VDS Montage</h1>
+                <p className="text-xs text-white/50">Créateur de citations</p>
+              </div>
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-purple-500/20 rounded-full border border-purple-500/30">
+                <Sparkles className="w-3 h-3 text-purple-400" />
+                <span className="text-xs text-purple-300">AI</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-purple-500/20 rounded-full border border-purple-500/30">
-              <Sparkles className="w-3 h-3 text-purple-400" />
-              <span className="text-xs text-purple-300">AI</span>
-            </div>
+            <FormatSelector />
           </header>
           
           {/* Canvas */}
@@ -73,19 +119,20 @@ export default function Home() {
       {/* MOBILE/TABLET LAYOUT */}
       <div className="flex lg:hidden flex-col flex-1 min-h-0">
         {/* Mobile Header */}
-        <header className="flex-shrink-0 flex items-center justify-center gap-2 py-2 mb-2">
-          <img 
-            src="/images/logo-vds.png" 
-            alt="VDS Logo" 
-            className="w-8 h-8 object-contain"
-          />
-          <div className="text-center">
+        <header className="flex-shrink-0 flex items-center justify-between gap-2 py-2 mb-2">
+          <div className="flex items-center gap-2">
+            <img 
+              src="/images/logo-vds.png" 
+              alt="VDS Logo" 
+              className="w-8 h-8 object-contain"
+            />
             <h1 className="text-lg font-bold text-white leading-tight">VDS Montage</h1>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-purple-500/20 rounded-full border border-purple-500/30">
+              <Sparkles className="w-3 h-3 text-purple-400" />
+              <span className="text-[10px] text-purple-300">AI</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-purple-500/20 rounded-full border border-purple-500/30">
-            <Sparkles className="w-3 h-3 text-purple-400" />
-            <span className="text-[10px] text-purple-300">AI</span>
-          </div>
+          <FormatSelector />
         </header>
 
         {/* Canvas - Takes remaining space */}

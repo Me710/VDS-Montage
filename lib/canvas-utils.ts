@@ -14,6 +14,23 @@ export const CANVAS_DIMENSIONS: Record<CanvasFormat, { width: number; height: nu
 function scaleMin(base: number, canvas: HTMLCanvasElement): number {
   return Math.round(base * Math.min(canvas.width, canvas.height) / 1024)
 }
+
+// Count the number of wrapped lines for a given text and maxWidth
+function countWrappedLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): number {
+  const words = text.split(' ')
+  let line = ''
+  let count = 0
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + words[i] + ' '
+    if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+      count++
+      line = words[i] + ' '
+    } else {
+      line = testLine
+    }
+  }
+  return count + 1
+}
 // ────────────────────────────────────────────────────────────────────────────
 
 export interface CanvasState {
@@ -456,23 +473,43 @@ function drawTextContent(ctx: CanvasRenderingContext2D, template: Template, stat
 
   ctx.fillStyle = state.textColor
   ctx.font = `${quoteSize}px ${fontFallback(quoteFont)}`
-  wrapText(ctx, state.quote, centerX, centerY, Math.round(canvas.width * 0.68), quoteSize * 1.4)
 
-  if (state.author) {
-    let authorY: number
+  const maxQuoteWidth = Math.round(canvas.width * 0.68)
+  const quoteLineHeight = quoteSize * 1.4
 
-    if (template.frameStyle === 'circular') {
-      // L'auteur doit être DANS le cercle, juste au-dessus de son bord inférieur.
-      // Rayon du cercle interne (identique à drawCircularFrame) = scaleMin(400, canvas).
-      const r = scaleMin(400, canvas)
-      // Position : centre + rayon - (hauteur texte + marge)
-      authorY = centerY + r - authorSize - scaleMin(18, canvas)
+  if (template.frameStyle === 'circular') {
+    // Centre la citation ET l'auteur ensemble comme un groupe vertical
+    // dans l'espace disponible entre la ligne décorative et le bas du cercle.
+    const r = scaleMin(400, canvas)
+    const padding = scaleMin(44, canvas)
+    const gapAuthor = scaleMin(48, canvas)
+    const availableTop = decorLineY + padding
+    const availableBottom = centerY + r - padding
+
+    const numLines = countWrappedLines(ctx, state.quote, maxQuoteWidth)
+    const quoteBlockH = (numLines - 1) * quoteLineHeight
+
+    if (state.author) {
+      const groupH = quoteBlockH + gapAuthor + authorSize
+      const groupStartY = (availableTop + availableBottom - groupH) / 2
+      const quoteY = groupStartY + quoteBlockH / 2
+      const authorY = groupStartY + quoteBlockH + gapAuthor + authorSize / 2
+
+      wrapText(ctx, state.quote, centerX, quoteY, maxQuoteWidth, quoteLineHeight)
+      ctx.font = `italic ${authorSize}px ${fontFallback(authorFont)}`
+      ctx.fillText(`— ${state.author}`, centerX, authorY)
     } else {
-      authorY = canvas.height - Math.round(canvas.height * 0.195)
+      const quoteY = (availableTop + availableBottom) / 2
+      wrapText(ctx, state.quote, centerX, quoteY, maxQuoteWidth, quoteLineHeight)
     }
+  } else {
+    wrapText(ctx, state.quote, centerX, centerY, maxQuoteWidth, quoteLineHeight)
 
-    ctx.font = `italic ${authorSize}px ${fontFallback(authorFont)}`
-    ctx.fillText(`— ${state.author}`, centerX, authorY)
+    if (state.author) {
+      const authorY = canvas.height - Math.round(canvas.height * 0.195)
+      ctx.font = `italic ${authorSize}px ${fontFallback(authorFont)}`
+      ctx.fillText(`— ${state.author}`, centerX, authorY)
+    }
   }
 }
 

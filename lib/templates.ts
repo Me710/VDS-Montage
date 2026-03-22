@@ -1,6 +1,6 @@
-export type TemplateType = 'jour' | 'saint' | 'ciel' | 'evangile'
+export type TemplateType = 'jour' | 'saint' | 'ciel' | 'evangile' | 'histoire'
 
-export type FrameStyle = 'circular' | 'geometric' | 'elegant' | 'ornate' | 'geometric-sacred' | 'regard-ciel' | 'regard-ciel-nom' | 'regard-ciel-citation' | 'evangile-simple' | 'evangile-verset' | 'evangile-narratif'
+export type FrameStyle = 'circular' | 'geometric' | 'elegant' | 'ornate' | 'geometric-sacred' | 'regard-ciel' | 'regard-ciel-nom' | 'regard-ciel-citation' | 'evangile-simple' | 'evangile-verset' | 'evangile-narratif' | 'histoire-classique' | 'histoire-fiche' | 'histoire-portrait'
 
 export interface Template {
   id: string
@@ -225,6 +225,56 @@ export const templates: Record<TemplateType, Template[]> = {
       authorFont: 'Inter',
       authorSize: 18
     }
+  ],
+  histoire: [
+    {
+      id: 'histoire-1',
+      name: 'Biographie Classique',
+      icon: 'scroll',
+      style: 'classic-bio',
+      defaultBg: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1024&h=1024&fit=crop',
+      frameStyle: 'histoire-classique',
+      frameColor: '#1a3a6b',
+      overlayGradient: 'linear-gradient(180deg, rgba(26, 58, 107, 0.85), rgba(10, 25, 50, 0.9))',
+      titleFont: 'Playfair Display',
+      titleSize: 38,
+      quoteFont: 'Inter',
+      quoteSize: 22,
+      authorFont: 'Inter',
+      authorSize: 20
+    },
+    {
+      id: 'histoire-2',
+      name: 'Fiche Illustrée',
+      icon: 'layout-list',
+      style: 'illustrated-card',
+      defaultBg: 'https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=1024&h=1024&fit=crop',
+      frameStyle: 'histoire-fiche',
+      frameColor: '#8B4513',
+      overlayGradient: 'linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.85) 100%)',
+      titleFont: 'Playfair Display',
+      titleSize: 34,
+      quoteFont: 'Inter',
+      quoteSize: 20,
+      authorFont: 'Playfair Display',
+      authorSize: 20
+    },
+    {
+      id: 'histoire-3',
+      name: 'Portrait Spirituel',
+      icon: 'sparkles',
+      style: 'spiritual-portrait',
+      defaultBg: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=1024&h=1024&fit=crop',
+      frameStyle: 'histoire-portrait',
+      frameColor: '#d4af37',
+      overlayGradient: 'linear-gradient(180deg, rgba(75, 0, 130, 0.4), rgba(0, 0, 50, 0.8))',
+      titleFont: 'Cinzel',
+      titleSize: 36,
+      quoteFont: 'Inter',
+      quoteSize: 20,
+      authorFont: 'Playfair Display',
+      authorSize: 22
+    }
   ]
 }
 
@@ -275,5 +325,17 @@ export const galleryImages: Record<TemplateType, GalleryImage[]> = {
     { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1024&h=1024&fit=crop', name: 'Vallée Paisible', category: 'biblical' },
     { url: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=1024&h=1024&fit=crop', name: 'Rayon de Lumière Forêt', category: 'biblical' },
     { url: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1024&h=1024&fit=crop', name: 'Rivière Paisible', category: 'biblical' }
+  ],
+  histoire: [
+    { url: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?w=1024&h=1024&fit=crop', name: 'Croix au Soleil', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=1024&h=1024&fit=crop', name: 'Sacré Cœur', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=1024&h=1024&fit=crop', name: 'Lumière Divine', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1504551591408-94a57e84ff1e?w=1024&h=1024&fit=crop', name: 'Vitraux Sacrés', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=1024&h=1024&fit=crop', name: 'Statue Sacrée', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?w=1024&h=1024&fit=crop', name: 'Nuages Célestes', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1476900966873-ab290e38e3f7?w=1024&h=1024&fit=crop', name: 'Bougies de Prière', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=1024&h=1024&fit=crop', name: 'Oliviers Anciens', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1024&h=1024&fit=crop', name: 'Chapelet et Rose', category: 'saints' },
+    { url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?w=1024&h=1024&fit=crop', name: 'Mains en Prière', category: 'saints' }
   ]
 }

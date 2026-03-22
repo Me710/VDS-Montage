@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai'
 
-export type ContentType = 'jour' | 'saint' | 'ciel' | 'evangile'
+export type ContentType = 'jour' | 'saint' | 'ciel' | 'evangile' | 'histoire'
 
 function getImagePrompt(type: ContentType, style: string, evangelContext?: string): string {
   switch (type) {
@@ -58,6 +58,32 @@ function getImagePrompt(type: ContentType, style: string, evangelContext?: strin
       ]
       const randomSubject = subjects[Math.floor(Math.random() * subjects.length)]
       return `Create an accurate Catholic religious image: ${randomSubject}. IMPORTANT: Be faithful to traditional Catholic iconography and symbolism. Do not invent or modify traditional attributes. Style: classical Renaissance or Baroque devotional art, warm golden divine lighting, reverent sacred atmosphere. High quality painting style. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks.`
+    case 'histoire': {
+      const histoireSubjects = [
+        'Saint Augustine of Hippo in black Augustinian habit, holding a book and pen, North African bishop, classical devotional painting style',
+        'Saint Thomas Aquinas in white Dominican habit with black cape, scholarly expression, holding Summa Theologica, medieval Italian setting',
+        'Saint Therese of Avila in brown Carmelite habit, mystical expression, quill and book, Spanish baroque setting',
+        'Saint Francis of Assisi in simple brown robe with rope belt, surrounded by animals and birds, Italian countryside',
+        'Saint Catherine of Siena in white Dominican tertiary robes, holding a lily and cross, medieval Italian setting',
+        'Saint Benedict of Nursia in black Benedictine habit, holding a book of rules and a broken cup, monastery setting',
+        'Saint Ignatius of Loyola in black Jesuit cassock, holding a book with IHS symbol, contemplative expression',
+        'Saint Hildegard of Bingen in black Benedictine habit, surrounded by mystical visions and herbs, medieval manuscript style',
+        'Saint John Paul II in white papal vestments with gold cross, warm pastoral expression, modern setting',
+        'Mother Teresa in white sari with blue stripes, caring expression, simple Calcutta setting',
+        'Saint Joan of Arc in medieval armor holding a white banner with fleur-de-lis, young courageous woman',
+        'Saint Padre Pio in brown Capuchin habit, elderly friar with beard, stigmata visible on hands',
+        'Saint Therese of Lisieux in brown Carmelite habit, young face, holding roses and a crucifix',
+        'Saint Maximilian Kolbe in grey Franciscan habit, round glasses, concentration camp setting with dignity',
+        'Saint Vincent de Paul in black cassock, surrounded by poor people and orphans, charitable scene',
+      ]
+      const randomHistoireSubject = histoireSubjects[Math.floor(Math.random() * histoireSubjects.length)]
+
+      if (evangelContext && evangelContext.trim().length > 0) {
+        return `Create an accurate Catholic religious portrait painting of ${evangelContext}. Style: classical Renaissance or Baroque devotional art, warm golden divine lighting, reverent sacred atmosphere. The saint should be depicted with their traditional Catholic iconographic attributes. High quality painting style. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks.`
+      }
+
+      return `Create an accurate Catholic religious portrait painting: ${randomHistoireSubject}. IMPORTANT: Be faithful to traditional Catholic iconography and symbolism. Style: classical Renaissance or Baroque devotional art, warm golden divine lighting, reverent sacred atmosphere. High quality painting style. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks.`
+    }
     case 'evangile': {
       const evangelCinematicStyle = `Cinematic lighting, soft volumetric sun rays, gentle dust particles floating in the air, shallow depth of field. The mood is peaceful, sacred, timeless, and contemplative, evoking biblical symbolism, humility, guidance, and divine calm. Ultra-high quality, cinematic composition, modern 3D realism with symbolic minimalism, no facial features, physically based rendering, global illumination, soft shadows. Color palette: warm golds, soft greens, beige, earthy browns, natural light. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks, no logos.`
 

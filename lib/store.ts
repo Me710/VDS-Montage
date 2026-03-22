@@ -109,6 +109,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       title = "L'Évangile Illustré"
       quote = ''
       author = ''
+    } else if (type === 'histoire') {
+      title = ''
+      quote = ''
+      author = ''
     }
     
     return {

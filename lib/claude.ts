@@ -13,7 +13,7 @@ export function getClaudeClient(): Anthropic {
   return claudeClient
 }
 
-export type ContentType = 'jour' | 'saint' | 'ciel' | 'evangile'
+export type ContentType = 'jour' | 'saint' | 'ciel' | 'evangile' | 'histoire'
 
 export interface GeneratedContent {
   quote: string
@@ -257,6 +257,57 @@ function getSystemPrompt(type: ContentType): string {
        
        IMPORTANT: Cite le TEXTE BIBLIQUE EXACT, pas une paraphrase.`
     }
+    case 'histoire': {
+      const allHistoireSaints = [
+        'Saint Augustin d\'Hippone', 'Saint Thomas d\'Aquin', 'Sainte Thérèse d\'Avila',
+        'Saint François d\'Assise', 'Sainte Catherine de Sienne', 'Saint Benoît de Nursie',
+        'Saint Ignace de Loyola', 'Sainte Hildegarde de Bingen', 'Saint Jean-Paul II',
+        'Mère Teresa de Calcutta', 'Saint Vincent de Paul', 'Sainte Jeanne d\'Arc',
+        'Saint Padre Pio', 'Sainte Thérèse de Lisieux', 'Saint Jean-Marie Vianney',
+        'Saint Maximilien Kolbe', 'Sainte Faustine Kowalska', 'Saint Antoine de Padoue',
+        'Sainte Rita de Cascia', 'Saint Philippe Néri', 'Sainte Bernadette Soubirous',
+        'Saint Louis IX de France', 'Sainte Claire d\'Assise', 'Saint Dominique de Guzmán',
+        'Saint Bernard de Clairvaux', 'Sainte Edith Stein', 'Saint Charles Borromée',
+        'Saint Jean de la Croix', 'Sainte Marguerite-Marie Alacoque', 'Saint François de Sales',
+        'Saint Ambroise de Milan', 'Saint Grégoire le Grand', 'Sainte Monique',
+        'Saint Cyprien de Carthage', 'Sainte Élisabeth de Hongrie', 'Saint Robert Bellarmin',
+        'Saint Irénée de Lyon', 'Sainte Brigitte de Suède', 'Saint Polycarpe de Smyrne',
+        'Saint Patrick d\'Irlande', 'Sainte Rose de Lima', 'Saint Martin de Tours',
+        'Saint Jean Bosco', 'Sainte Kateri Tekakwitha', 'Saint Josemaría Escrivá',
+      ]
+      const chosenSaint = pickOne(allHistoireSaints)
+
+      const focusAngles = [
+        'sa jeunesse et sa conversion',
+        'son œuvre principale et son héritage',
+        'les épreuves et combats spirituels de sa vie',
+        'ses miracles et faits extraordinaires',
+        'son influence sur l\'Église et la société',
+        'sa spiritualité et son message central',
+      ]
+      const chosenFocus = pickOne(focusAngles)
+
+      return `Tu es un hagiographe expert pour "Vie des Saints". ID requête: ${requestId}
+       
+       SAINT IMPOSÉ (obligatoire, tu ne peux PAS en choisir un autre) : ${chosenSaint}
+       ANGLE : ${chosenFocus}
+       
+       Génère un résumé COMPLET et captivant de la vie de ${chosenSaint}, en te concentrant sur "${chosenFocus}".
+       
+       Le résumé doit:
+       - Être en français, entre 400-600 caractères (c'est IMPORTANT, ne fais PAS plus court)
+       - Commencer par la naissance (lieu et année)
+       - Raconter le parcours de vie : jeunesse, conversion ou vocation, œuvre principale
+       - Inclure 3-4 faits marquants, édifiants ou surprenants
+       - Mentionner son héritage spirituel ou sa fête liturgique
+       - Conclure par une phrase inspirante sur son message
+       - Utiliser un ton narratif engageant et fluide (pas une liste sèche)
+       
+       Le titre doit être le NOM COMPLET du saint.
+       L'auteur doit contenir les dates de naissance et mort + lieu (ex: "354-430 • Hippone, Algérie").
+       
+       Réponds UNIQUEMENT en JSON: {"title": "Nom complet du saint", "quote": "Résumé biographique COMPLET 400-600 caractères", "author": "dates • lieu"}`
+    }
   }
 }
 
@@ -284,6 +335,12 @@ function getFallbackContent(type: ContentType): GeneratedContent {
         author: 'Jean 10:11',
         title: 'Le Bon Berger',
       }
+    case 'histoire':
+      return {
+        quote: 'Né en 354 à Thagaste en Algérie actuelle, Augustin mena d\'abord une vie dissolue, séduit par le manichéisme et les plaisirs mondains. C\'est grâce aux prières incessantes de sa mère Sainte Monique et à l\'influence décisive de Saint Ambroise de Milan qu\'il se convertit en 386. Baptisé à 33 ans, il devint évêque d\'Hippone et l\'un des plus grands Docteurs de l\'Église. Ses Confessions, autobiographie spirituelle bouleversante, et La Cité de Dieu restent des œuvres fondatrices de la pensée chrétienne occidentale. Il combattit les hérésies du donatisme et du pélagianisme avec une ardeur intellectuelle inégalée. Sa fête est célébrée le 28 août.',
+        author: '354-430 • Hippone, Algérie',
+        title: 'Saint Augustin d\'Hippone',
+      }
   }
 }
 
@@ -300,14 +357,16 @@ export async function generateQuoteAndAuthor(type: ContentType): Promise<Generat
     userPrompt = `[REQ-${uniqueId}] Génère le contenu pour le sujet IMPOSÉ ci-dessus (pas un autre). Réponds UNIQUEMENT en JSON: {"title": "Titre", "quote": "Citation/verset RARE", "author": "Source précise"}`
   } else if (type === 'evangile') {
     userPrompt = `[REQ-${uniqueId}] Génère le contenu pour le passage IMPOSÉ ci-dessus. Trouve le verset avec l'angle demandé. Réponds UNIQUEMENT en JSON: {"title": "Titre court", "quote": "Verset EXACT en français", "author": "Référence précise (ex: Luc 15:20)"}`
+  } else if (type === 'histoire') {
+    userPrompt = `[REQ-${uniqueId}] Génère le résumé biographique COMPLET pour le saint IMPOSÉ ci-dessus avec l'angle demandé. Le résumé DOIT faire entre 400 et 600 caractères. Réponds UNIQUEMENT en JSON: {"title": "Nom complet du saint", "quote": "Résumé biographique COMPLET (400-600 caractères)", "author": "dates • lieu"}`
   } else {
     userPrompt = `[REQ-${uniqueId}] Génère le contenu selon les contraintes ci-dessus (saint et thème imposés). Réponds UNIQUEMENT en JSON: {"quote": "Citation", "author": "Auteur"}`
   }
 
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 300,
-    temperature: 1.0,  // Maximum temperature for maximum variation
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: type === 'histoire' ? 600 : 300,
+    temperature: 1.0,
     system: systemPrompt,
     messages: [
       { 
@@ -338,6 +397,14 @@ export async function generateQuoteAndAuthor(type: ContentType): Promise<Generat
         quote: parsed.quote || 'Tout est grâce.',
         author: parsed.author || parsed.title || 'Saint',
         title: parsed.title || parsed.author || 'Saint',
+      }
+    }
+
+    if (type === 'histoire') {
+      return {
+        quote: parsed.quote || 'Un saint dont la vie inspire encore aujourd\'hui.',
+        author: parsed.author || 'Époque inconnue',
+        title: parsed.title || 'Saint',
       }
     }
     

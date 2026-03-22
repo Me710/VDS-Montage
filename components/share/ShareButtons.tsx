@@ -75,6 +75,8 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
         return `🙏 #UnRegardAuCiel\n\n${title ? `${title}\n\n` : ''}${quote ? `« ${quote} »\n\n` : ''}${author ? `— ${author}` : ''}`
       case 'evangile':
         return `📖 L'Évangile Illustré\n\n${title ? `${title}\n\n` : ''}${quote ? `« ${quote} »\n\n` : ''}${author ? `— ${author}` : ''}`
+      case 'histoire':
+        return `📜 Vie des Saints\n\n${title ? `${title}\n\n` : ''}${quote ? `${quote}\n\n` : ''}${author ? `${author}` : ''}`
       default:
         return `${title}\n\n« ${quote} »\n\n${author ? `— ${author}` : ''}`
     }
@@ -114,6 +116,7 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
         case 'saint': serviceLabel = '✝️ Pensée de Saint'; break
         case 'ciel': serviceLabel = '🙏 #UnRegardAuCiel'; break
         case 'evangile': serviceLabel = '📖 L\'Évangile Illustré'; break
+        case 'histoire': serviceLabel = '📜 Vie des Saints'; break
       }
       const caption = `${serviceLabel}\n\n${title ? `${title}\n\n` : ''}${quote ? `« ${quote.substring(0, 150)}${quote.length > 150 ? '...' : ''} »\n\n` : ''}${author ? `— ${author}` : ''}`
       
@@ -156,6 +159,7 @@ export function ShareButtons({ canvasRef }: ShareButtonsProps) {
           saint: 'Pensée de Saint',
           ciel: 'Un Regard au Ciel',
           evangile: "L'Évangile Illustré",
+          histoire: 'Vie des Saints',
         }
         await navigator.share({
           files: [file],

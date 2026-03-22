@@ -30,6 +30,7 @@ export function Controls() {
   const currentTemplate = templates[type][templateIndex]
   const isCielType = type === 'ciel'
   const isEvangileType = type === 'evangile'
+  const isHistoireType = type === 'histoire'
   const isCielSimple = currentTemplate?.frameStyle === 'regard-ciel'
   const isCielNom = currentTemplate?.frameStyle === 'regard-ciel-nom'
   const isCielCitation = currentTemplate?.frameStyle === 'regard-ciel-citation'
@@ -58,6 +59,12 @@ export function Controls() {
     quotePlaceholder = 'Verset de l\'Évangile...'
     authorLabel = 'Référence'
     authorPlaceholder = 'Jean 10:11'
+  } else if (isHistoireType) {
+    titleLabel = 'Nom du Saint'
+    titlePlaceholder = 'Saint Augustin d\'Hippone...'
+    quotePlaceholder = 'Résumé de la vie du saint...'
+    authorLabel = 'Dates & Lieu'
+    authorPlaceholder = '354-430 • Hippone, Algérie'
   }
 
   // Show/hide fields based on style
@@ -73,6 +80,7 @@ export function Controls() {
   let sectionTitle = 'Contenu'
   if (isCielType) sectionTitle = 'Contenu #UnRegardAuCiel'
   else if (isEvangileType) sectionTitle = "L'Évangile Illustré"
+  else if (isHistoireType) sectionTitle = 'Vie des Saints'
 
   return (
     <div className="section-card space-y-3 p-4">
@@ -98,17 +106,17 @@ export function Controls() {
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <label className="text-xs font-medium text-white/60">
-              {isEvangileType ? (isEvangileNarratif ? 'Évangile complet' : 'Verset') : 'Citation'}
+              {isHistoireType ? 'Biographie' : isEvangileType ? (isEvangileNarratif ? 'Évangile complet' : 'Verset') : 'Citation'}
             </label>
             <span className="text-[10px] text-white/40">
-              {quote.length}/{isEvangileNarratif ? '1000' : '300'}
+              {quote.length}/{isEvangileNarratif ? '1000' : isHistoireType ? '500' : '300'}
             </span>
           </div>
           <textarea
             value={quote}
             onChange={(e) => setQuote(e.target.value)}
-            maxLength={isEvangileNarratif ? 1000 : 300}
-            rows={isEvangileNarratif ? 6 : 3}
+            maxLength={isEvangileNarratif ? 1000 : isHistoireType ? 500 : 300}
+            rows={isEvangileNarratif ? 6 : isHistoireType ? 5 : 3}
             className="textarea-field text-sm py-2"
             placeholder={isEvangileNarratif ? "Texte complet de l'évangile du jour..." : quotePlaceholder}
           />
@@ -146,6 +154,15 @@ export function Controls() {
             {isEvangileSimple && "Simple : Titre de la scène + Référence"}
             {isEvangileVerset && "Avec Verset : Titre + Extrait du texte + Référence"}
             {isEvangileNarratif && "Narratif : Titre + Texte complet de l'évangile + Référence"}
+          </p>
+        </div>
+      )}
+
+      {/* Info message for histoire type */}
+      {isHistoireType && (
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+          <p className="text-xs text-blue-400">
+            Vie des Saints : Nom du saint + Biographie résumée + Dates et lieu. Utilisez l'IA pour générer automatiquement un résumé inspirant.
           </p>
         </div>
       )}

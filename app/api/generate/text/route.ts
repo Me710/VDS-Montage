@@ -10,9 +10,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const type = body.type as ContentType
 
-    if (!type || !['jour', 'saint', 'ciel', 'evangile'].includes(type)) {
+    if (!type || !['jour', 'saint', 'ciel', 'evangile', 'histoire'].includes(type)) {
       return NextResponse.json(
-        { error: 'Invalid type. Must be "jour", "saint", "ciel" or "evangile"' },
+        { error: 'Invalid type. Must be "jour", "saint", "ciel", "evangile" or "histoire"' },
         { status: 400 }
       )
     }

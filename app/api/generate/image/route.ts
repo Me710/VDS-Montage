@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateImageWithGemini, type ContentType } from '@/lib/gemini'
+import { generateBackgroundImage } from '@/lib/pollinations'
+import type { ContentType } from '@/lib/claude'
 
 // Force dynamic - never cache this route
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+// Pollinations peut prendre quelques secondes — on laisse jusqu'à 60s (max Vercel Hobby)
+export const maxDuration = 60
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,18 +22,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const imageUrl = await generateImageWithGemini(type, style, context)
+    const imageUrl = await generateBackgroundImage(type, style, context)
 
     return NextResponse.json({ imageUrl })
   } catch (error) {
     console.error('Image generation error:', error)
-    
-    if (error instanceof Error && error.message.includes('GEMINI_API_KEY')) {
-      return NextResponse.json(
-        { error: 'Gemini API key not configured' },
-        { status: 500 }
-      )
-    }
 
     return NextResponse.json(
       { error: 'Failed to generate image: ' + (error instanceof Error ? error.message : 'Unknown error') },

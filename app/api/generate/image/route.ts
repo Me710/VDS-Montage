@@ -28,8 +28,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Image generation error:', error)
 
+    // Message propre en français pour l'utilisateur (les erreurs techniques
+    // Pollinations restent dans les logs serveur)
     return NextResponse.json(
-      { error: 'Failed to generate image: ' + (error instanceof Error ? error.message : 'Unknown error') },
+      { error: 'Échec de la génération de l\'image. Merci de réessayer.' },
       { status: 500 }
     )
   }

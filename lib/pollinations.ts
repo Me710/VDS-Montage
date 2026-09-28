@@ -115,6 +115,51 @@ function getImagePrompt(type: ContentType, style: string, evangelContext?: strin
   }
 }
 
+// Fetch avec retries + backoff. Pollinations (service gratuit communautaire)
+// renvoie parfois un 500 sous charge : un retry rapide avec une nouvelle graine
+// réussit presque toujours.
+async function fetchPollinationsImage(prompt: string): Promise<{ buffer: Buffer; mimeType: string }> {
+  const maxAttempts = 3
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const seed = Math.floor(Math.random() * 1_000_000)
+    const url = `${POLLINATIONS_BASE}${encodeURIComponent(prompt)}?width=768&height=768&nologo=true&seed=${seed}`
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 18_000)
+
+    try {
+      const res = await fetch(url, { signal: controller.signal, cache: 'no-store' })
+      if (res.ok) {
+        const buffer = Buffer.from(await res.arrayBuffer())
+        const mimeType = res.headers.get('content-type') || 'image/jpeg'
+        return { buffer, mimeType }
+      }
+      // 5xx et 429 sont retryables ; les autres erreurs remontent immédiatement
+      if (res.status >= 500 || res.status === 429) {
+        lastError = new Error(`Pollinations returned ${res.status}`)
+      } else {
+        throw new Error(`Pollinations returned ${res.status}`)
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        lastError = new Error('Image generation timed out')
+      } else {
+        lastError = error instanceof Error ? error : new Error(String(error))
+      }
+    } finally {
+      clearTimeout(timeout)
+    }
+
+    if (attempt < maxAttempts) {
+      await new Promise((r) => setTimeout(r, attempt * 1000))
+    }
+  }
+
+  throw lastError || new Error('Image generation failed')
+}
+
 // Génère l'image via Pollinations.ai et renvoie une data-URL base64
 // (identique au comportement précédent, donc le front-end n'a pas à changer).
 export async function generateBackgroundImage(
@@ -123,26 +168,6 @@ export async function generateBackgroundImage(
   context?: string
 ): Promise<string> {
   const prompt = getImagePrompt(type, style, context)
-  const seed = Math.floor(Math.random() * 1_000_000)
-  const url = `${POLLINATIONS_BASE}${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&seed=${seed}`
-
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 55_000)
-
-  try {
-    const res = await fetch(url, { signal: controller.signal, cache: 'no-store' })
-    if (!res.ok) {
-      throw new Error(`Pollinations returned ${res.status}`)
-    }
-    const buffer = Buffer.from(await res.arrayBuffer())
-    const mimeType = res.headers.get('content-type') || 'image/jpeg'
-    return `data:${mimeType};base64,${buffer.toString('base64')}`
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Image generation timed out - please try again')
-    }
-    throw error
-  } finally {
-    clearTimeout(timeout)
-  }
+  const { buffer, mimeType } = await fetchPollinationsImage(prompt)
+  return `data:${mimeType};base64,${buffer.toString('base64')}`
 }

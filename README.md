@@ -38,6 +38,7 @@ Toutes sont optionnelles. Voir `.env.example`.
 |---|---|
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Bouton « Sauvegarder Telegram » |
 | `DATABASE_URL` | Connexion PostgreSQL (vérifiable via `/api/health/db`) |
+| `POLLINATIONS_API_KEY` | Clé de compte Pollinations : images sans logo et sans limite par IP |
 | `POLLINATIONS_TEXT_MODEL` | Remplace le modèle de texte par défaut (`openai-fast`) |
 
 ## Architecture
@@ -82,6 +83,7 @@ Toutes les routes API répondent en cas d'échec par `{ "error": "<message en fr
 ## Limites connues
 
 - Le palier gratuit de Pollinations limite le débit (environ une requête texte toutes les 30 s et une image toutes les 45 s, par adresse IP du serveur). L'application patiente et réessaie automatiquement.
+- Sans `POLLINATIONS_API_KEY`, les images générées portent le logo Pollinations (condition du palier anonyme).
 - Le modèle de texte est petit : vérifiez les citations et références avant publication.
 
 ## Licence

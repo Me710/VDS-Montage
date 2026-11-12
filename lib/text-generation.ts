@@ -91,7 +91,7 @@ function getSystemPrompt(type: ContentType): string {
        - Être UNIQUE, POÉTIQUE et SURPRENANTE
        - NE JAMAIS reprendre des citations déjà connues
        
-       Invente un auteur crédible (philosophe, écrivain fictif mais réaliste, penseur original).
+       N'attribue la citation à PERSONNE : aucun auteur, réel ou inventé. Le champ "author" doit rester vide ("").
        
        CITATIONS INTERDITES (ne JAMAIS utiliser ni paraphraser):
        ${BANNED_QUOTES.slice(0, 5).map(q => `- "${q}"`).join('\n       ')}`
@@ -312,7 +312,7 @@ function getFallbackContent(type: ContentType): GeneratedContent {
     case 'jour':
       return {
         quote: 'Chaque jour est une nouvelle chance de devenir qui vous voulez être.',
-        author: 'Sagesse Universelle',
+        author: '',
       }
     case 'saint':
       return {
@@ -353,6 +353,8 @@ export async function generateQuoteAndAuthor(type: ContentType): Promise<Generat
     userPrompt = `[REQ-${uniqueId}] Génère le contenu pour le passage IMPOSÉ ci-dessus. Trouve le verset avec l'angle demandé. Réponds UNIQUEMENT en JSON: {"title": "Titre court", "quote": "Verset EXACT en français", "author": "Référence précise (ex: Luc 15:20)"}`
   } else if (type === 'histoire') {
     userPrompt = `[REQ-${uniqueId}] Génère le résumé biographique COMPLET pour le saint IMPOSÉ ci-dessus avec l'angle demandé. Le résumé DOIT faire entre 400 et 600 caractères. Réponds UNIQUEMENT en JSON: {"title": "Nom complet du saint", "quote": "Résumé biographique COMPLET (400-600 caractères)", "author": "dates • lieu"}`
+  } else if (type === 'jour') {
+    userPrompt = `[REQ-${uniqueId}] Génère le contenu selon les contraintes ci-dessus (thème et style imposés). Réponds UNIQUEMENT en JSON: {"quote": "Citation", "author": ""}`
   } else {
     userPrompt = `[REQ-${uniqueId}] Génère le contenu selon les contraintes ci-dessus (saint et thème imposés). Réponds UNIQUEMENT en JSON: {"quote": "Citation", "author": "Auteur"}`
   }
@@ -384,6 +386,14 @@ export async function generateQuoteAndAuthor(type: ContentType): Promise<Generat
       }
     }
     
+    if (type === 'jour') {
+      // Citation originale générée : jamais d'auteur, même si le modèle en propose un
+      return {
+        quote: parsed.quote || 'La sagesse commence dans l\'émerveillement.',
+        author: '',
+      }
+    }
+
     return {
       quote: parsed.quote || 'La sagesse commence dans l\'émerveillement.',
       author: parsed.author || 'Anonyme',

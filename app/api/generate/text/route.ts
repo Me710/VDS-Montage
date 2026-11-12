@@ -1,33 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateQuoteAndAuthor, type ContentType } from '@/lib/claude'
+import { generateQuoteAndAuthor, isContentType } from '@/lib/text-generation'
+import { ApiError, enforceRateLimit, handleRouteError, readJsonBody } from '@/lib/api-server'
 
 // Force dynamic - never cache this route
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 // Le service gratuit impose un délai entre deux requêtes : on laisse le temps aux retries
-export const maxDuration = 60
+export const maxDuration = 120
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const type = body.type as ContentType
+    enforceRateLimit(request, 'generate-text', 12)
 
-    if (!type || !['jour', 'saint', 'ciel', 'evangile', 'histoire'].includes(type)) {
-      return NextResponse.json(
-        { error: 'Invalid type. Must be "jour", "saint", "ciel", "evangile" or "histoire"' },
-        { status: 400 }
-      )
+    const body = await readJsonBody(request)
+    if (!isContentType(body.type)) {
+      throw new ApiError(400, 'bad_request', 'Type de publication inconnu.')
     }
 
-    const content = await generateQuoteAndAuthor(type)
-
+    const content = await generateQuoteAndAuthor(body.type)
     return NextResponse.json(content)
   } catch (error) {
-    console.error('Text generation error:', error)
-    
-    return NextResponse.json(
-      { error: 'Échec de la génération du texte. Merci de réessayer dans quelques secondes.' },
-      { status: 500 }
+    return handleRouteError(
+      error,
+      'generate/text',
+      'Le service de génération de texte est momentanément indisponible. Réessayez dans quelques secondes.'
     )
   }
 }

@@ -188,22 +188,36 @@ body {
 }
 
 /* Toast notification */
-.toast {
-  @apply fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-2xl 
-         bg-dark-light border border-white/10 text-white
-         transform translate-y-full opacity-0 transition-all duration-300 z-50;
+.toast-card {
+  @apply pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-2xl
+         bg-dark-light border border-white/10 text-white;
+  animation: toast-in 0.25s ease-out;
 }
 
-.toast.show {
-  @apply translate-y-0 opacity-100;
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.toast-success {
-  @apply border-l-4 border-l-green-500;
+/* Focus clavier visible partout */
+:where(button, a, input, select, textarea, [role='tab']):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
-.toast-error {
-  @apply border-l-4 border-l-red-500;
+/* Boutons désactivés : état lisible et pas d'effet au survol */
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-ai:disabled {
+  @apply opacity-50 cursor-not-allowed hover:scale-100;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Type selector */

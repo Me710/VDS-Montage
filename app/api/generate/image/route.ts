@@ -1,38 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateBackgroundImage } from '@/lib/pollinations'
-import type { ContentType } from '@/lib/claude'
+import { isContentType } from '@/lib/text-generation'
+import { ApiError, enforceRateLimit, handleRouteError, readJsonBody } from '@/lib/api-server'
 
 // Force dynamic - never cache this route
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-// Pollinations peut prendre quelques secondes — on laisse jusqu'à 60s (max Vercel Hobby)
-export const maxDuration = 60
+// La génération d'image peut prendre du temps (file d'attente du service gratuit)
+export const maxDuration = 120
+
+const MAX_STYLE_LENGTH = 60
+const MAX_CONTEXT_LENGTH = 200
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const type = body.type as ContentType
-    const style = body.style as string || 'beautiful'
-    const context = body.context as string | undefined
+    enforceRateLimit(request, 'generate-image', 8)
 
-    if (!type || !['jour', 'saint', 'ciel', 'evangile', 'histoire'].includes(type)) {
-      return NextResponse.json(
-        { error: 'Invalid type. Must be "jour", "saint", "ciel", "evangile" or "histoire"' },
-        { status: 400 }
-      )
+    const body = await readJsonBody(request)
+    if (!isContentType(body.type)) {
+      throw new ApiError(400, 'bad_request', 'Type de publication inconnu.')
     }
 
-    const imageUrl = await generateBackgroundImage(type, style, context)
+    // Les champs libres sont bornés : ils sont insérés dans le prompt d'image
+    const style = typeof body.style === 'string' && body.style.trim()
+      ? body.style.trim().slice(0, MAX_STYLE_LENGTH)
+      : 'beautiful'
+    const context = typeof body.context === 'string' && body.context.trim()
+      ? body.context.trim().slice(0, MAX_CONTEXT_LENGTH)
+      : undefined
 
+    const imageUrl = await generateBackgroundImage(body.type, style, context)
     return NextResponse.json({ imageUrl })
   } catch (error) {
-    console.error('Image generation error:', error)
-
-    // Message propre en français pour l'utilisateur (les erreurs techniques
-    // Pollinations restent dans les logs serveur)
-    return NextResponse.json(
-      { error: 'Échec de la génération de l\'image. Merci de réessayer.' },
-      { status: 500 }
+    return handleRouteError(
+      error,
+      'generate/image',
+      "Le service de génération d'image est momentanément indisponible. Réessayez dans quelques secondes."
     )
   }
 }

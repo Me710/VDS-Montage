@@ -42,7 +42,6 @@ export interface EditorState {
   canvasFormat: CanvasFormat
   
   // AI Generation state
-  isGenerating: boolean
   generatingText: boolean
   generatingImage: boolean
   
@@ -61,7 +60,6 @@ export interface EditorState {
   setOverlayOpacity: (opacity: number) => void
   setCustomFontFamily: (font: string) => void
   setFontSizeOffset: (offset: number) => void
-  setIsGenerating: (generating: boolean) => void
   setGeneratingText: (generating: boolean) => void
   setGeneratingImage: (generating: boolean) => void
   
@@ -89,7 +87,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   customFontFamily: '',
   fontSizeOffset: 0,
   canvasFormat: '1:1',
-  isGenerating: false,
   generatingText: false,
   generatingImage: false,
   
@@ -125,7 +122,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
   }),
   
-  setTemplateIndex: (templateIndex) => set({ templateIndex }),
+  setTemplateIndex: (templateIndex) => set((state) => ({
+    templateIndex: Math.min(Math.max(0, templateIndex), templates[state.type].length - 1),
+  })),
   setCanvasFormat: (canvasFormat) => set({ canvasFormat }),
   setTitle: (title) => set({ title }),
   setQuote: (quote) => set({ quote }),
@@ -138,14 +137,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setOverlayOpacity: (overlayOpacity) => set({ overlayOpacity }),
   setCustomFontFamily: (customFontFamily) => set({ customFontFamily }),
   setFontSizeOffset: (fontSizeOffset) => set({ fontSizeOffset }),
-  setIsGenerating: (isGenerating) => set({ isGenerating }),
   setGeneratingText: (generatingText) => set({ generatingText }),
   setGeneratingImage: (generatingImage) => set({ generatingImage }),
   
   // Computed
   getCurrentTemplate: () => {
     const state = get()
-    return templates[state.type][state.templateIndex]
+    const list = templates[state.type]
+    // Garde-fou : un index hors limites retombe sur le premier template
+    return list[state.templateIndex] ?? list[0]
   },
   
   // Batch updates
@@ -154,13 +154,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     author: content.author,
     // For "ciel" type, also set the title if provided
     title: content.title || state.title,
-    generatingText: false,
   })),
   
-  setGeneratedImage: (url) => set({
-    backgroundImage: url,
-    generatingImage: false,
-  }),
+  setGeneratedImage: (url) => set({ backgroundImage: url }),
 }))
 
 // Initialize custom logo from localStorage (client-side only)

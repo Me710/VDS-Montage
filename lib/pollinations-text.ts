@@ -11,9 +11,14 @@ import { ApiError } from './api-server'
 const POLLINATIONS_TEXT_URL = 'https://text.pollinations.ai/openai'
 const DEFAULT_TEXT_MODEL = 'openai-fast'
 
+// `openai-fast` est un modèle à raisonnement : sans réglage, il produit ~1000
+// jetons de réflexion pour une citation (≈ 18 s mesurées). En effort « low »,
+// la même demande répond en ≈ 4 s pour une qualité comparable.
+const DEFAULT_REASONING_EFFORT = 'low'
+
 const MAX_ATTEMPTS = 3
 const MAX_WAIT_MS = 32_000
-const REQUEST_TIMEOUT_MS = 30_000
+const REQUEST_TIMEOUT_MS = 45_000
 
 function retryDelayMs(res: Response, attempt: number): number {
   const retryAfter = Number(res.headers.get('retry-after'))
@@ -28,10 +33,14 @@ export async function generateTextWithPollinations(
   userPrompt: string
 ): Promise<string> {
   let lastError: Error | null = null
+  // 'off' désactive l'envoi du paramètre (POLLINATIONS_REASONING_EFFORT)
+  let reasoningEffort: string | null = process.env.POLLINATIONS_REASONING_EFFORT || DEFAULT_REASONING_EFFORT
+  if (reasoningEffort === 'off') reasoningEffort = null
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+    const startedAt = Date.now()
     let waitMs = attempt * 2000
 
     try {
@@ -48,6 +57,7 @@ export async function generateTextWithPollinations(
           ],
           temperature: 1.0,
           seed: Math.floor(Math.random() * 1_000_000),
+          ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
         }),
       })
 
@@ -58,6 +68,12 @@ export async function generateTextWithPollinations(
           return text
         }
         lastError = new Error('Empty response from Pollinations text API')
+      } else if (res.status === 400 && reasoningEffort) {
+        // Le service ne reconnaît plus ce paramètre : on réessaie sans lui
+        console.warn('[pollinations-text] 400 with reasoning_effort, retrying without it')
+        reasoningEffort = null
+        lastError = new Error('Pollinations text API returned 400')
+        waitMs = 500
       } else if (res.status === 402 || res.status === 429 || res.status >= 500) {
         // Limite de débit ou erreur passagère : retryable
         lastError = new Error(`Pollinations text API returned ${res.status}`)
@@ -76,6 +92,11 @@ export async function generateTextWithPollinations(
     } finally {
       clearTimeout(timeout)
     }
+
+    // Trace par tentative : permet de distinguer lenteur, quota et panne dans les logs
+    console.warn(
+      `[pollinations-text] attempt ${attempt}/${MAX_ATTEMPTS} failed after ${Date.now() - startedAt} ms: ${lastError?.message}`
+    )
 
     if (attempt < MAX_ATTEMPTS) {
       await new Promise((r) => setTimeout(r, waitMs))

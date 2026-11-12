@@ -127,10 +127,12 @@ const POLLINATIONS_KEYED_BASE = 'https://gen.pollinations.ai/image/'
 
 async function fetchKeyedPollinationsImage(
   prompt: string,
-  apiKey: string
+  apiKey: string,
+  model?: string
 ): Promise<{ buffer: Buffer; mimeType: string }> {
   const seed = Math.floor(Math.random() * 1_000_000)
-  const url = `${POLLINATIONS_KEYED_BASE}${encodeURIComponent(prompt)}?width=768&height=768&nologo=true&seed=${seed}`
+  const modelParam = model ? `&model=${encodeURIComponent(model)}` : ''
+  const url = `${POLLINATIONS_KEYED_BASE}${encodeURIComponent(prompt)}?width=768&height=768&nologo=true&seed=${seed}${modelParam}`
 
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 40_000)
@@ -208,11 +210,12 @@ async function fetchPollinationsImage(prompt: string): Promise<{ buffer: Buffer;
 
 // Génère l'image via Pollinations.ai et renvoie une data-URL base64.
 // Avec POLLINATIONS_API_KEY : API authentifiée (sans logo), sinon palier anonyme.
-export async function generatePollinationsImage(prompt: string): Promise<string> {
+// `model` (identifiant du catalogue Pollinations) n'est pris en compte qu'avec une clé.
+export async function generatePollinationsImage(prompt: string, model?: string): Promise<string> {
   const apiKey = process.env.POLLINATIONS_API_KEY
   if (apiKey) {
     try {
-      const keyed = await fetchKeyedPollinationsImage(prompt, apiKey)
+      const keyed = await fetchKeyedPollinationsImage(prompt, apiKey, model)
       return `data:${keyed.mimeType};base64,${keyed.buffer.toString('base64')}`
     } catch (error) {
       // Clé invalide, crédit épuisé, panne : on retombe sur le palier anonyme (avec logo)

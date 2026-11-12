@@ -116,6 +116,42 @@ function getImagePrompt(type: ContentType, style: string, evangelContext?: strin
   }
 }
 
+// ─── Chemin avec clé (optionnel) ─────────────────────────────────────────────
+// Sans clé, Pollinations appose son logo sur chaque image : c'est la condition
+// du palier anonyme. Avec une clé de compte (POLLINATIONS_API_KEY, obtenue sur
+// enter.pollinations.ai), l'API authentifiée fournit des images sans logo et
+// sans limite par adresse IP. La clé n'est lue que depuis l'environnement et
+// passe dans un en-tête, jamais dans l'URL.
+const POLLINATIONS_KEYED_BASE = 'https://gen.pollinations.ai/image/'
+
+async function fetchKeyedPollinationsImage(
+  prompt: string,
+  apiKey: string
+): Promise<{ buffer: Buffer; mimeType: string }> {
+  const seed = Math.floor(Math.random() * 1_000_000)
+  const url = `${POLLINATIONS_KEYED_BASE}${encodeURIComponent(prompt)}?width=768&height=768&nologo=true&seed=${seed}`
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 40_000)
+  try {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: controller.signal,
+      cache: 'no-store',
+    })
+    if (!res.ok) {
+      throw new Error(`Pollinations keyed API returned ${res.status}`)
+    }
+    const mimeType = res.headers.get('content-type') || 'image/jpeg'
+    if (!mimeType.startsWith('image/')) {
+      throw new Error(`Pollinations keyed API returned unexpected content type ${mimeType}`)
+    }
+    return { buffer: Buffer.from(await res.arrayBuffer()), mimeType }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 // Fetch avec retries + backoff. Pollinations (service gratuit communautaire)
 // renvoie parfois un 500 sous charge : un retry rapide avec une nouvelle graine
 // réussit presque toujours.
@@ -177,6 +213,20 @@ export async function generateBackgroundImage(
   context?: string
 ): Promise<string> {
   const prompt = getImagePrompt(type, style, context)
+
+  const apiKey = process.env.POLLINATIONS_API_KEY
+  if (apiKey) {
+    try {
+      const keyed = await fetchKeyedPollinationsImage(prompt, apiKey)
+      return `data:${keyed.mimeType};base64,${keyed.buffer.toString('base64')}`
+    } catch (error) {
+      // Clé invalide, crédit épuisé, panne : on retombe sur le palier anonyme (avec logo)
+      console.warn(
+        '[pollinations-image] keyed request failed, falling back to anonymous tier:',
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 
   const { buffer, mimeType } = await fetchPollinationsImage(prompt)
   return `data:${mimeType};base64,${buffer.toString('base64')}`

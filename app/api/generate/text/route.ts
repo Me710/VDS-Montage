@@ -23,9 +23,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Text generation error:', error)
     
-    if (error instanceof Error && error.message.includes('CLAUDE_API_KEY')) {
+    if (error instanceof Error && error.message.includes('is configured')) {
       return NextResponse.json(
-        { error: 'Claude API key not configured' },
+        { error: 'No AI key configured (set HF_TOKEN or CLAUDE_API_KEY)' },
         { status: 500 }
       )
     }

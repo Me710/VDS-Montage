@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.72.1",
     "@google/genai": "^1.40.0",
     "@google/generative-ai": "^0.24.1",
+    "@huggingface/inference": "^4.13.32",
     "@vercel/blob": "^0.22.0",
     "autoprefixer": "^10.4.17",
     "clsx": "^2.1.0",

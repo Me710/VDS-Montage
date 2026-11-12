@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, forwardRef, useRef } from 'react'
 import { useEditorStore } from '@/lib/store'
-import { renderCanvas, CANVAS_DIMENSIONS, type CanvasState } from '@/lib/canvas-utils'
+import { renderCanvas, CANVAS_DIMENSIONS, type CanvasState } from '@/lib/canvas'
 import type { Template } from '@/lib/templates'
 import { Loader2 } from 'lucide-react'
 

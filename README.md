@@ -71,7 +71,8 @@ lib/
 ├── telegram.ts               # Client Telegram
 ├── db.ts                     # Pool PostgreSQL
 ├── store.ts, toast-store.ts  # État de l'éditeur, notifications
-├── canvas-utils.ts           # Rendu du visuel sur canvas
+├── canvas/                   # Rendu du visuel : index (entrée), frames, text, logo,
+│                             #   regard-ciel, evangile, histoire, helpers, types
 ├── templates.ts              # Templates et galerie
 └── files.ts, utils.ts, use-is-desktop.ts
 ```

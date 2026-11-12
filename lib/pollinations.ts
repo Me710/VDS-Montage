@@ -1,5 +1,4 @@
 import type { ContentType } from './claude'
-import { generateImageWithHuggingFace, isHuggingFaceConfigured } from './huggingface'
 
 // ─── Pollinations.ai — génération d'image gratuite, sans clé API ─────────────
 // Endpoint GET https://image.pollinations.ai/prompt/{prompt}?params
@@ -169,16 +168,6 @@ export async function generateBackgroundImage(
   context?: string
 ): Promise<string> {
   const prompt = getImagePrompt(type, style, context)
-
-  // Hugging Face en priorité si HF_TOKEN est défini ; en cas d'échec (quota,
-  // modèle indisponible…), on retombe sur Pollinations.
-  if (isHuggingFaceConfigured()) {
-    try {
-      return await generateImageWithHuggingFace(prompt)
-    } catch (error) {
-      console.error('Hugging Face image generation failed, falling back to Pollinations:', error)
-    }
-  }
 
   const { buffer, mimeType } = await fetchPollinationsImage(prompt)
   return `data:${mimeType};base64,${buffer.toString('base64')}`

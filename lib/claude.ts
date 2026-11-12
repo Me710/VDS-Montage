@@ -1,18 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk'
-import { generateTextWithHuggingFace, isHuggingFaceConfigured } from './huggingface'
+import { generateTextWithPollinations } from './pollinations-text'
 
-let claudeClient: Anthropic | null = null
-
-export function getClaudeClient(): Anthropic {
-  if (!claudeClient) {
-    const apiKey = process.env.CLAUDE_API_KEY
-    if (!apiKey) {
-      throw new Error('CLAUDE_API_KEY is not configured')
-    }
-    claudeClient = new Anthropic({ apiKey })
-  }
-  return claudeClient
-}
+// NB : ce fichier garde son nom historique, mais la génération de texte passe
+// désormais exclusivement par un modèle open source gratuit (voir
+// lib/pollinations-text.ts). Aucune clé API n'est nécessaire.
 
 export type ContentType = 'jour' | 'saint' | 'ciel' | 'evangile' | 'histoire'
 
@@ -346,13 +336,6 @@ function getFallbackContent(type: ContentType): GeneratedContent {
 }
 
 export async function generateQuoteAndAuthor(type: ContentType): Promise<GeneratedContent> {
-  // Fournisseur de texte : Claude si CLAUDE_API_KEY est défini, sinon
-  // Hugging Face (HF_TOKEN). Sans aucune des deux clés, on échoue clairement.
-  const useClaude = Boolean(process.env.CLAUDE_API_KEY)
-  if (!useClaude && !isHuggingFaceConfigured()) {
-    throw new Error('Neither CLAUDE_API_KEY nor HF_TOKEN is configured')
-  }
-
   const systemPrompt = getSystemPrompt(type)
   
   // Build a unique user prompt with random number to bust any response caching
@@ -369,32 +352,7 @@ export async function generateQuoteAndAuthor(type: ContentType): Promise<Generat
     userPrompt = `[REQ-${uniqueId}] Génère le contenu selon les contraintes ci-dessus (saint et thème imposés). Réponds UNIQUEMENT en JSON: {"quote": "Citation", "author": "Auteur"}`
   }
 
-  const maxTokens = type === 'histoire' ? 600 : 300
-  let text: string
-
-  if (useClaude) {
-    const response = await getClaudeClient().messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: maxTokens,
-      temperature: 1.0,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: userPrompt
-        }
-      ],
-    })
-
-    const content = response.content[0]
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type')
-    }
-
-    text = content.text
-  } else {
-    text = await generateTextWithHuggingFace(systemPrompt, userPrompt, maxTokens)
-  }
+  const text = await generateTextWithPollinations(systemPrompt, userPrompt)
 
   try {
     // Extract JSON from the response

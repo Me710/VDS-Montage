@@ -4,6 +4,8 @@ import { generateQuoteAndAuthor, type ContentType } from '@/lib/claude'
 // Force dynamic - never cache this route
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+// Le service gratuit impose un délai entre deux requêtes : on laisse le temps aux retries
+export const maxDuration = 60
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,15 +25,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Text generation error:', error)
     
-    if (error instanceof Error && error.message.includes('is configured')) {
-      return NextResponse.json(
-        { error: 'No AI key configured (set HF_TOKEN or CLAUDE_API_KEY)' },
-        { status: 500 }
-      )
-    }
-
     return NextResponse.json(
-      { error: 'Failed to generate content' },
+      { error: 'Échec de la génération du texte. Merci de réessayer dans quelques secondes.' },
       { status: 500 }
     )
   }

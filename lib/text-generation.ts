@@ -1,7 +1,7 @@
-import { generateTextWithPollinations } from './pollinations-text'
+import { generateText } from './ai/text'
 
-// Génération de texte (citations, versets, biographies) via un modèle open
-// source gratuit — voir lib/pollinations-text.ts. Aucune clé API n'est nécessaire.
+// Génération de texte (citations, versets, biographies) : prompts et analyse des
+// réponses. Le fournisseur IA est choisi dans l'administration (lib/ai/).
 
 export const CONTENT_TYPES = ['jour', 'saint', 'ciel', 'evangile', 'histoire'] as const
 
@@ -359,7 +359,7 @@ export async function generateQuoteAndAuthor(type: ContentType): Promise<Generat
     userPrompt = `[REQ-${uniqueId}] Génère le contenu selon les contraintes ci-dessus (saint et thème imposés). Réponds UNIQUEMENT en JSON: {"quote": "Citation", "author": "Auteur"}`
   }
 
-  const text = await generateTextWithPollinations(systemPrompt, userPrompt)
+  const text = await generateText(systemPrompt, userPrompt)
 
   try {
     // Extract JSON from the response

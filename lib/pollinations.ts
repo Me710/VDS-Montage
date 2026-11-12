@@ -7,7 +7,8 @@ import { ApiError } from './api-server'
 
 const POLLINATIONS_BASE = 'https://image.pollinations.ai/prompt/'
 
-function getImagePrompt(type: ContentType, style: string, evangelContext?: string): string {
+// Construit le prompt d'image selon le type de publication (indépendant du fournisseur).
+export function getImagePrompt(type: ContentType, style: string, evangelContext?: string): string {
   switch (type) {
     case 'jour':
       return `Create a photorealistic beautiful serene ${style} landscape photograph for an inspirational quote background. Natural scenery with soft golden hour lighting. Mountains, ocean, forest, or meadow. High quality, peaceful atmosphere. Professional photography, cinematic lighting. Square format 1:1 aspect ratio. No text, no words, no letters, no watermarks.`
@@ -205,15 +206,9 @@ async function fetchPollinationsImage(prompt: string): Promise<{ buffer: Buffer;
   )
 }
 
-// Génère l'image via Pollinations.ai et renvoie une data-URL base64
-// (identique au comportement précédent, donc le front-end n'a pas à changer).
-export async function generateBackgroundImage(
-  type: ContentType,
-  style: string,
-  context?: string
-): Promise<string> {
-  const prompt = getImagePrompt(type, style, context)
-
+// Génère l'image via Pollinations.ai et renvoie une data-URL base64.
+// Avec POLLINATIONS_API_KEY : API authentifiée (sans logo), sinon palier anonyme.
+export async function generatePollinationsImage(prompt: string): Promise<string> {
   const apiKey = process.env.POLLINATIONS_API_KEY
   if (apiKey) {
     try {

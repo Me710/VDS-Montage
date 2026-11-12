@@ -14,7 +14,7 @@ export class ApiClientError extends Error {
 }
 
 interface ApiFetchOptions {
-  method?: 'GET' | 'POST'
+  method?: 'GET' | 'POST' | 'PUT'
   body?: unknown
   timeoutMs?: number
   fallbackMessage?: string

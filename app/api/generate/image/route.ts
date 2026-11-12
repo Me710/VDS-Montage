@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateBackgroundImage } from '@/lib/pollinations'
+import { getImagePrompt } from '@/lib/pollinations'
+import { generateImage } from '@/lib/ai/image'
 import { isContentType } from '@/lib/text-generation'
 import { ApiError, enforceRateLimit, handleRouteError, readJsonBody } from '@/lib/api-server'
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
       ? body.context.trim().slice(0, MAX_CONTEXT_LENGTH)
       : undefined
 
-    const imageUrl = await generateBackgroundImage(body.type, style, context)
+    const imageUrl = await generateImage(getImagePrompt(body.type, style, context))
     return NextResponse.json({ imageUrl })
   } catch (error) {
     return handleRouteError(

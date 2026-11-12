@@ -10,6 +10,8 @@ export type ApiErrorCode =
   | 'not_configured'
   | 'upstream_error'
   | 'not_found'
+  | 'unauthorized'
+  | 'forbidden'
   | 'internal_error'
 
 export class ApiError extends Error {

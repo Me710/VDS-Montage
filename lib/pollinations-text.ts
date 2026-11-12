@@ -30,7 +30,8 @@ function retryDelayMs(res: Response, attempt: number): number {
 
 export async function generateTextWithPollinations(
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  modelOverride?: string
 ): Promise<string> {
   let lastError: Error | null = null
   // 'off' désactive l'envoi du paramètre (POLLINATIONS_REASONING_EFFORT)
@@ -50,7 +51,7 @@ export async function generateTextWithPollinations(
         cache: 'no-store',
         signal: controller.signal,
         body: JSON.stringify({
-          model: process.env.POLLINATIONS_TEXT_MODEL || DEFAULT_TEXT_MODEL,
+          model: modelOverride || process.env.POLLINATIONS_TEXT_MODEL || DEFAULT_TEXT_MODEL,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },

@@ -95,6 +95,8 @@ Le panneau `/admin` (protégé par `ADMIN_PASSWORD`) permet de choisir le fourni
 | Claude (Anthropic) | oui | non |
 | Ollama | oui | non |
 
+La liste des modèles de chaque fournisseur est récupérée en direct depuis son API (cache de 10 minutes) ; la saisie manuelle reste possible. Avec `POLLINATIONS_API_KEY`, le catalogue complet de Pollinations devient sélectionnable.
+
 Si le fournisseur choisi échoue, l'application bascule sur Pollinations. Pour ajouter un fournisseur compatible OpenAI, il suffit d'une entrée dans `lib/ai/providers.ts`.
 
 ### Conventions d'erreur

@@ -83,7 +83,7 @@ export async function generateImageWith(
 
   try {
     if (provider.imageApi === 'pollinations') {
-      return await generatePollinationsImage(prompt)
+      return await generatePollinationsImage(prompt, settings.imageModel || undefined)
     }
     return await callOpenAiImages(provider, settings.imageModel || defaultModel(provider, 'image'), prompt)
   } catch (error) {
@@ -109,8 +109,9 @@ export async function generateImage(prompt: string): Promise<string> {
         `[ai-image] ${settings.imageProvider} failed, falling back to pollinations:`,
         error instanceof Error ? error.message : error
       )
+      return generatePollinationsImage(prompt)
     }
   }
 
-  return generatePollinationsImage(prompt)
+  return generatePollinationsImage(prompt, settings.imageModel || undefined)
 }

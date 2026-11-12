@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle2, AlertCircle, FlaskConical, Image as ImageIcon, Loader2, LogOut, MessageSquare, Save, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, RefreshCw, CheckCircle2, AlertCircle, FlaskConical, Image as ImageIcon, Loader2, LogOut, MessageSquare, Save, ShieldCheck } from 'lucide-react'
 import { apiFetch, errorMessage } from '@/lib/api-client'
 import { toast } from '@/lib/toast-store'
 import { cn } from '@/lib/utils'
@@ -35,6 +35,18 @@ interface AdminState {
 }
 
 type Kind = 'text' | 'image'
+
+interface ModelInfo {
+  id: string
+  label: string
+  free?: boolean
+}
+
+interface ModelListState {
+  status: 'idle' | 'loading' | 'ready' | 'error'
+  models: ModelInfo[]
+  error?: string
+}
 
 interface TestResult {
   ok: boolean
@@ -126,6 +138,34 @@ function ProviderSection({
 }) {
   const [testing, setTesting] = useState(false)
   const [result, setResult] = useState<TestResult | null>(null)
+  const [modelList, setModelList] = useState<ModelListState>({ status: 'idle', models: [] })
+  const [freeOnly, setFreeOnly] = useState(false)
+  const [reloadToken, setReloadToken] = useState(0)
+
+  // Récupère la liste des modèles du fournisseur sélectionné (liste en direct,
+  // mise en cache 10 minutes côté serveur). En cas d'échec, la saisie manuelle reste possible.
+  useEffect(() => {
+    let cancelled = false
+    setModelList({ status: 'loading', models: [] })
+    apiFetch<{ models: ModelInfo[] }>(
+      `/api/admin/models?provider=${encodeURIComponent(providerId)}&kind=${kind}`,
+      { timeoutMs: 20_000, fallbackMessage: 'Liste des modèles indisponible.' }
+    )
+      .then((data) => {
+        if (!cancelled) setModelList({ status: 'ready', models: Array.isArray(data.models) ? data.models : [] })
+      })
+      .catch((err) => {
+        if (!cancelled) setModelList({ status: 'error', models: [], error: errorMessage(err, 'Liste des modèles indisponible.') })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [providerId, kind, reloadToken])
+
+  const hasFreeFlag = modelList.models.some((m) => m.free)
+  const hasPaid = modelList.models.some((m) => !m.free)
+  const visibleModels = freeOnly ? modelList.models.filter((m) => m.free) : modelList.models
+  const knownModel = model === '' || modelList.status !== 'ready' || modelList.models.length === 0 || modelList.models.some((m) => m.id === model)
 
   const available = providers.filter((p) => (kind === 'text' ? p.supportsText : p.supportsImage))
   const selected = available.find((p) => p.id === providerId)
@@ -179,6 +219,7 @@ function ProviderSection({
               disabled={!provider.configured}
               onClick={() => {
                 setResult(null)
+                setFreeOnly(false)
                 onChange(provider.id, '')
               }}
               className={cn(
@@ -206,11 +247,38 @@ function ProviderSection({
         })}
       </div>
 
-      <div className="space-y-1">
-        <label htmlFor={`model-${kind}`} className="text-xs font-medium text-white/70">Modèle</label>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <label htmlFor={`model-${kind}`} className="text-xs font-medium text-white/70">Modèle</label>
+          <div className="flex items-center gap-3">
+            {hasFreeFlag && hasPaid && (
+              <label className="flex items-center gap-1.5 text-[11px] text-white/60 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={freeOnly}
+                  onChange={(e) => setFreeOnly(e.target.checked)}
+                  className="accent-[#d4af37]"
+                />
+                Gratuits uniquement
+              </label>
+            )}
+            <button
+              type="button"
+              onClick={() => setReloadToken((n) => n + 1)}
+              disabled={modelList.status === 'loading'}
+              aria-label="Actualiser la liste des modèles"
+              title="Actualiser la liste des modèles"
+              className="text-white/50 hover:text-white transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={cn('w-3.5 h-3.5', modelList.status === 'loading' && 'animate-spin')} aria-hidden />
+            </button>
+          </div>
+        </div>
+
         <input
           id={`model-${kind}`}
           type="text"
+          list={`models-${kind}`}
           value={model}
           onChange={(e) => {
             setResult(null)
@@ -219,11 +287,30 @@ function ProviderSection({
           placeholder={defaultModel ? `Par défaut : ${defaultModel}` : 'Modèle par défaut du fournisseur'}
           maxLength={120}
           spellCheck={false}
+          autoComplete="off"
           className="input-field text-sm py-2 w-full font-mono"
         />
-        <p className="text-[11px] text-white/40">
-          Laissez vide pour utiliser le modèle par défaut. Sinon, saisissez l&apos;identifiant exact du modèle chez le fournisseur.
+        <datalist id={`models-${kind}`}>
+          {visibleModels.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label}{m.free && hasPaid ? ' — gratuit' : ''}
+            </option>
+          ))}
+        </datalist>
+
+        <p role="status" className="text-[11px] text-white/40 leading-snug">
+          {modelList.status === 'loading' && 'Récupération des modèles disponibles...'}
+          {modelList.status === 'ready' && modelList.models.length > 0 &&
+            `${visibleModels.length} modèle${visibleModels.length > 1 ? 's' : ''} disponible${visibleModels.length > 1 ? 's' : ''} : cliquez dans le champ ou tapez pour filtrer. Laissez vide pour le modèle par défaut.`}
+          {modelList.status === 'ready' && modelList.models.length === 0 &&
+            'Ce fournisseur ne propose pas de choix de modèle ici. Laissez vide pour le modèle par défaut.'}
+          {modelList.status === 'error' && modelList.error}
         </p>
+        {!knownModel && (
+          <p className="text-[11px] text-amber-200/80 leading-snug">
+            Ce modèle n&apos;apparaît pas dans la liste du fournisseur. Testez-le avant d&apos;enregistrer.
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

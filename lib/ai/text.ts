@@ -6,7 +6,9 @@ import { getAiSettings, type AiSettings } from './settings'
 // ─── Génération de texte, tous fournisseurs ──────────────────────────────────
 
 const REQUEST_TIMEOUT_MS = 45_000
-const MAX_TOKENS = 1_024
+const ANONYMOUS_POLLINATIONS_MODEL = 'openai-fast'
+// Marge pour les modèles à raisonnement, qui consomment des jetons avant de répondre
+const MAX_TOKENS = 2_048
 
 function providerError(provider: ProviderDefinition, status: number): ApiError {
   if (status === 401 || status === 403) {
@@ -124,7 +126,17 @@ export async function generateTextWith(
   try {
     switch (provider.textApi) {
       case 'pollinations':
-        return await generateTextWithPollinations(systemPrompt, userPrompt, settings.textModel || undefined)
+        // Clé de compte + modèle choisi dans le catalogue : API authentifiée
+        // (tous les modèles, pas de limite par IP). Sinon : palier anonyme gratuit.
+        if (process.env.POLLINATIONS_API_KEY && settings.textModel && settings.textModel !== ANONYMOUS_POLLINATIONS_MODEL) {
+          return await callOpenAiCompatible(
+            { ...provider, envVar: 'POLLINATIONS_API_KEY', baseUrl: 'https://gen.pollinations.ai/v1' },
+            settings.textModel,
+            systemPrompt,
+            userPrompt
+          )
+        }
+        return await generateTextWithPollinations(systemPrompt, userPrompt)
       case 'anthropic':
         return await callAnthropic(provider, model, systemPrompt, userPrompt)
       default:
@@ -158,5 +170,12 @@ export async function generateText(systemPrompt: string, userPrompt: string): Pr
     }
   }
 
-  return generateTextWith(settings, systemPrompt, userPrompt)
+  // Pollinations avec un modèle du catalogue : repli sur le palier anonyme en cas d'échec
+  try {
+    return await generateTextWith(settings, systemPrompt, userPrompt)
+  } catch (error) {
+    if (!settings.textModel) throw error
+    console.warn('[ai-text] pollinations keyed model failed, falling back to anonymous tier:', error instanceof Error ? error.message : error)
+    return generateTextWithPollinations(systemPrompt, userPrompt)
+  }
 }

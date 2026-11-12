@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { templates, type TemplateType, type Template } from './templates'
-import { type CanvasFormat } from './canvas-utils'
+import { type CanvasFormat } from './canvas'
 
 export type { CanvasFormat }
 

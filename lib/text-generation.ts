@@ -1,10 +1,15 @@
 import { generateTextWithPollinations } from './pollinations-text'
 
-// NB : ce fichier garde son nom historique, mais la génération de texte passe
-// désormais exclusivement par un modèle open source gratuit (voir
-// lib/pollinations-text.ts). Aucune clé API n'est nécessaire.
+// Génération de texte (citations, versets, biographies) via un modèle open
+// source gratuit — voir lib/pollinations-text.ts. Aucune clé API n'est nécessaire.
 
-export type ContentType = 'jour' | 'saint' | 'ciel' | 'evangile' | 'histoire'
+export const CONTENT_TYPES = ['jour', 'saint', 'ciel', 'evangile', 'histoire'] as const
+
+export function isContentType(value: unknown): value is ContentType {
+  return typeof value === 'string' && (CONTENT_TYPES as readonly string[]).includes(value)
+}
+
+export type ContentType = (typeof CONTENT_TYPES)[number]
 
 export interface GeneratedContent {
   quote: string

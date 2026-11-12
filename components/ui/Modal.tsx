@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react'
 
 type ModalType = 'success' | 'error' | 'info'
@@ -53,19 +53,29 @@ export function Modal({
 }: ModalProps) {
   const Icon = iconMap[type]
   const colors = colorMap[type]
+  const titleId = useId()
+  const messageId = useId()
+  const confirmRef = useRef<HTMLButtonElement>(null)
 
-  // Close on Escape key
+  // Escape pour fermer, défilement de la page bloqué, focus placé sur le bouton
+  // puis rendu à l'élément d'origine à la fermeture.
   useEffect(() => {
+    if (!isOpen) return
+
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    const previousOverflow = document.body.style.overflow
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'hidden'
-    }
+
+    document.addEventListener('keydown', handleEscape)
+    document.body.style.overflow = 'hidden'
+    confirmRef.current?.focus()
+
     return () => {
       document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = previousOverflow
+      previouslyFocused?.focus?.()
     }
   }, [isOpen, onClose])
 
@@ -79,36 +89,47 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden
       />
       
       {/* Modal */}
-      <div className={`relative w-full max-w-sm rounded-2xl ${colors.bg} border ${colors.border} p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200`}>
+      <div
+        role={type === 'error' ? 'alertdialog' : 'dialog'}
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={messageId}
+        className={`relative w-full max-w-sm rounded-2xl bg-dark-light border ${colors.border} p-6 shadow-2xl`}
+      >
         {/* Close button */}
         <button
+          type="button"
           onClick={onClose}
+          aria-label="Fermer"
           className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5" aria-hidden />
         </button>
         
         {/* Content */}
         <div className="flex flex-col items-center text-center">
           {/* Icon */}
           <div className={`w-16 h-16 rounded-full ${colors.bg} border ${colors.border} flex items-center justify-center mb-4`}>
-            <Icon className={`w-8 h-8 ${colors.icon}`} />
+            <Icon className={`w-8 h-8 ${colors.icon}`} aria-hidden />
           </div>
           
           {/* Title */}
-          <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+          <h3 id={titleId} className="text-xl font-bold text-white mb-2">{title}</h3>
           
           {/* Message */}
-          <p className="text-white/70 text-sm mb-6">{message}</p>
+          <p id={messageId} className="text-white/70 text-sm mb-6">{message}</p>
           
           {/* Button */}
           <button
+            ref={confirmRef}
+            type="button"
             onClick={handleConfirm}
             className={`w-full py-3 px-6 rounded-xl ${colors.button} text-white font-semibold transition-colors`}
           >

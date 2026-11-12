@@ -1,29 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendImageToTelegram } from '@/lib/telegram'
+import { ApiError, enforceRateLimit, handleRouteError, readJsonBody } from '@/lib/api-server'
+
+export const dynamic = 'force-dynamic'
+
+const DEFAULT_CAPTION = '📸 VDS Montage - Nouvelle création'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { image, caption } = body
+    enforceRateLimit(request, 'telegram', 10)
 
-    if (!image) {
-      return NextResponse.json(
-        { error: 'No image provided' },
-        { status: 400 }
-      )
+    const body = await readJsonBody(request)
+    if (typeof body.image !== 'string' || !body.image) {
+      throw new ApiError(400, 'bad_request', 'Aucune image fournie.')
     }
+    const caption = typeof body.caption === 'string' && body.caption.trim() ? body.caption : DEFAULT_CAPTION
 
-    const success = await sendImageToTelegram(
-      image,
-      caption || '📸 VDS Montage - Nouvelle création'
-    )
-
-    return NextResponse.json({ success })
+    await sendImageToTelegram(body.image, caption)
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Telegram send error:', error)
-    return NextResponse.json(
-      { error: 'Failed to send to Telegram' },
-      { status: 500 }
-    )
+    return handleRouteError(error, 'telegram', "L'envoi vers Telegram a échoué. Merci de réessayer.")
   }
 }

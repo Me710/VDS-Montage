@@ -1,119 +1,88 @@
 # VDS Montage
 
-Application Next.js pour créer des visuels inspirants pour les réseaux sociaux avec génération IA.
+Application Next.js pour créer des visuels inspirants (citations, versets, vies de saints) pour les réseaux sociaux, avec génération IA gratuite.
 
 ## Fonctionnalités
 
-- **6 Templates** : 3 pour "Pensée du Jour" et 3 pour "Pensée de Saint"
-- **Génération IA** : 
-  - Citations et auteurs générés par GPT-4
-  - Images de fond générées par DALL-E 3
-  - Bouton "Tout Générer" pour une création rapide
-- **Logo Personnalisé** : Uploadez votre propre logo pour remplacer le logo VDS
-- **Personnalisation Complète** :
-  - Couleurs du cadre, texte et overlay
-  - Opacité de l'overlay ajustable
-  - Galerie d'images prédéfinies
-  - Import d'images personnalisées
-- **Export PNG** : Téléchargez votre création en haute qualité (1024x1024)
+- **5 types de publication** : Pensée du Jour, Pensée de Saint, Un Regard au Ciel, L'Évangile Illustré, Histoire (vie des saints), avec plusieurs templates chacun
+- **Génération IA sans clé API** : texte et image via [Pollinations.ai](https://pollinations.ai) (modèles open source)
+- **Évangile du jour** récupéré depuis AELF.org
+- **Personnalisation** : polices, taille, couleurs, opacité, image de fond (galerie ou import), logo personnalisé (conservé dans le navigateur)
+- **3 formats** : 1:1, 16:9, 9:16
+- **Export et partage** : PNG, sauvegarde Telegram, WhatsApp, Facebook, Instagram
 
-## Stack Technique
+## Stack technique
 
-- **Framework** : Next.js 14 (App Router)
-- **UI** : Tailwind CSS
-- **State** : Zustand
-- **IA** : OpenAI (GPT-4 + DALL-E 3)
-- **Stockage** : Vercel Blob (logos personnalisés)
+- **Framework** : Next.js 14 (App Router), React 18, TypeScript
+- **UI** : Tailwind CSS, lucide-react
+- **État** : Zustand
+- **IA** : Pollinations.ai (texte : GPT-OSS 20B ; image : service image)
+- **Base de données** : PostgreSQL (`pg`), connexion prête, pas encore utilisée par une fonctionnalité
+- **Hébergement** : Railway (déploiement automatique à chaque push sur `main`)
 
 ## Installation
 
 ```bash
-# Cloner le projet
-git clone https://github.com/votre-username/VDS-Montage.git
+git clone https://github.com/Me710/VDS-Montage.git
 cd VDS-Montage
-
-# Installer les dépendances
 npm install
-
-# Configurer les variables d'environnement
-cp .env.example .env
-# Éditer .env avec vos clés API
-
-# Lancer en développement
+cp .env.example .env   # toutes les variables sont optionnelles
 npm run dev
 ```
 
-## Variables d'Environnement
+## Variables d'environnement
 
-```env
-# Clé API OpenAI pour la génération de texte et d'images
-OPENAI_API_KEY=sk-...
+Toutes sont optionnelles. Voir `.env.example`.
 
-# Token Vercel Blob pour le stockage des logos (optionnel)
-BLOB_READ_WRITE_TOKEN=vercel_blob_...
-```
+| Variable | Rôle |
+|---|---|
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Bouton « Sauvegarder Telegram » |
+| `DATABASE_URL` | Connexion PostgreSQL (vérifiable via `/api/health/db`) |
+| `POLLINATIONS_TEXT_MODEL` | Remplace le modèle de texte par défaut (`openai-fast`) |
 
-## Structure du Projet
+## Architecture
 
 ```
 app/
-├── page.tsx                    # Page principale (éditeur)
-├── layout.tsx                  # Layout avec fonts
-├── globals.css                 # Styles Tailwind
-├── api/
-│   ├── generate/
-│   │   ├── text/route.ts       # API génération citation + auteur
-│   │   └── image/route.ts      # API génération image DALL-E
-│   └── logo/route.ts           # API upload logo
+├── page.tsx                  # Éditeur : une seule mise en page montée (bureau ou mobile)
+├── layout.tsx                # Polices, métadonnées, notifications globales
+├── error.tsx, global-error.tsx, not-found.tsx
+└── api/
+    ├── generate/text         # Génération de texte
+    ├── generate/image        # Génération d'image
+    ├── evangile              # Évangile du jour (AELF.org)
+    ├── telegram              # Envoi de l'image sur Telegram
+    └── health/db             # Vérification de la base de données
 
 components/
-├── editor/
-│   ├── Canvas.tsx              # Canvas de prévisualisation
-│   ├── TemplateSelector.tsx    # Sélection de template
-│   └── Controls.tsx            # Contrôles de personnalisation
-├── ai/
-│   └── AIGeneratePanel.tsx     # Panneau génération IA
-├── gallery/
-│   ├── ImageGallery.tsx        # Galerie d'images
-│   └── LogoUploader.tsx        # Upload logo personnalisé
-└── ui/
-    ├── Toast.tsx               # Notifications
-    └── LoadingOverlay.tsx      # Overlay de chargement
+├── editor/                   # Canvas, sélecteur de type/template, contrôles
+├── ai/                       # Panneau de génération IA
+├── gallery/                  # Images de fond, logo
+├── share/                    # Export et partage
+└── ui/                       # Modal, Toaster
 
 lib/
-├── store.ts                    # Store Zustand
-├── templates.ts                # Définitions templates
-├── openai.ts                   # Client OpenAI
-├── canvas-utils.ts             # Utilitaires canvas
-└── utils.ts                    # Utilitaires généraux
+├── api-server.ts             # Erreurs JSON uniformes, validation, délais, limite de débit
+├── api-client.ts             # fetch côté navigateur : délai, erreurs en français
+├── text-generation.ts        # Prompts et analyse des réponses texte
+├── pollinations-text.ts      # Client texte Pollinations (retries)
+├── pollinations.ts           # Prompts et client image Pollinations (retries)
+├── telegram.ts               # Client Telegram
+├── db.ts                     # Pool PostgreSQL
+├── store.ts, toast-store.ts  # État de l'éditeur, notifications
+├── canvas-utils.ts           # Rendu du visuel sur canvas
+├── templates.ts              # Templates et galerie
+└── files.ts, utils.ts, use-is-desktop.ts
 ```
 
-## Utilisation
+### Conventions d'erreur
 
-1. **Sélectionner un type** : Pensée du Jour ou Pensée de Saint
-2. **Choisir un template** : 3 styles disponibles par type
-3. **Générer le contenu** :
-   - Cliquer sur "Tout Générer" pour une génération complète par IA
-   - Ou générer texte et image séparément
-   - Ou saisir manuellement le contenu
-4. **Personnaliser** : Ajuster les couleurs et l'opacité
-5. **Ajouter un logo** (optionnel) : Uploader votre logo personnalisé
-6. **Exporter** : Télécharger en PNG
+Toutes les routes API répondent en cas d'échec par `{ "error": "<message en français>", "code": "<code>" }`. Le message est affichable tel quel ; les détails techniques restent dans les logs serveur.
 
-## Déploiement
+## Limites connues
 
-### Vercel (Recommandé)
-
-1. Connecter votre repo GitHub à Vercel
-2. Ajouter les variables d'environnement dans les paramètres du projet
-3. Déployer
-
-### Autre hébergement
-
-```bash
-npm run build
-npm run start
-```
+- Le palier gratuit de Pollinations limite le débit (environ une requête texte toutes les 30 s et une image toutes les 45 s, par adresse IP du serveur). L'application patiente et réessaie automatiquement.
+- Le modèle de texte est petit : vérifiez les citations et références avant publication.
 
 ## Licence
 

@@ -1,4 +1,5 @@
-import type { ContentType } from './claude'
+import type { ContentType } from './text-generation'
+import { ApiError } from './api-server'
 
 // ─── Pollinations.ai — génération d'image gratuite, sans clé API ─────────────
 // Endpoint GET https://image.pollinations.ai/prompt/{prompt}?params
@@ -137,7 +138,7 @@ async function fetchPollinationsImage(prompt: string): Promise<{ buffer: Buffer;
         return { buffer, mimeType }
       }
       // 5xx et 429 sont retryables ; les autres erreurs remontent immédiatement
-      if (res.status >= 500 || res.status === 429) {
+      if (res.status >= 500 || res.status === 429 || res.status === 402) {
         lastError = new Error(`Pollinations returned ${res.status}`)
       } else {
         throw new Error(`Pollinations returned ${res.status}`)
@@ -157,7 +158,15 @@ async function fetchPollinationsImage(prompt: string): Promise<{ buffer: Buffer;
     }
   }
 
-  throw lastError || new Error('Image generation failed')
+  console.error('[pollinations-image] all attempts failed:', lastError?.message)
+  if (lastError && /returned (402|429)$/.test(lastError.message)) {
+    throw new ApiError(429, 'rate_limited', 'Le service gratuit est très sollicité. Patientez une minute puis réessayez.')
+  }
+  throw new ApiError(
+    502,
+    'upstream_error',
+    "Le service de génération d'image est momentanément indisponible. Réessayez dans quelques secondes."
+  )
 }
 
 // Génère l'image via Pollinations.ai et renvoie une data-URL base64

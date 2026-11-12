@@ -23,6 +23,14 @@ const iconMap: Record<string, React.ReactNode> = {
   'sparkles': <Sparkles className="w-5 h-5" />,
 }
 
+const TYPE_OPTIONS: { id: TemplateType; label: string; icon: React.ReactNode }[] = [
+  { id: 'jour', label: 'Jour', icon: <Star className="w-3.5 h-3.5" aria-hidden /> },
+  { id: 'saint', label: 'Saint', icon: <Cross className="w-3.5 h-3.5" aria-hidden /> },
+  { id: 'ciel', label: 'Ciel', icon: <Eye className="w-3.5 h-3.5" aria-hidden /> },
+  { id: 'evangile', label: 'Évangile', icon: <BookOpen className="w-3.5 h-3.5" aria-hidden /> },
+  { id: 'histoire', label: 'Histoire', icon: <Scroll className="w-3.5 h-3.5" aria-hidden /> },
+]
+
 export function TemplateSelector() {
   const { type, templateIndex, setType, setTemplateIndex } = useEditorStore()
 
@@ -34,41 +42,18 @@ export function TemplateSelector() {
       
       {/* Type selector */}
       <div className="grid grid-cols-5 gap-1.5">
-        <button
-          onClick={() => setType('jour')}
-          className={cn('type-btn py-2 text-[10px]', type === 'jour' && 'active')}
-        >
-          <Star className="w-3.5 h-3.5" />
-          Jour
-        </button>
-        <button
-          onClick={() => setType('saint')}
-          className={cn('type-btn py-2 text-[10px]', type === 'saint' && 'active')}
-        >
-          <Cross className="w-3.5 h-3.5" />
-          Saint
-        </button>
-        <button
-          onClick={() => setType('ciel')}
-          className={cn('type-btn py-2 text-[10px]', type === 'ciel' && 'active')}
-        >
-          <Eye className="w-3.5 h-3.5" />
-          Ciel
-        </button>
-        <button
-          onClick={() => setType('evangile')}
-          className={cn('type-btn py-2 text-[10px]', type === 'evangile' && 'active')}
-        >
-          <BookOpen className="w-3.5 h-3.5" />
-          Évangile
-        </button>
-        <button
-          onClick={() => setType('histoire')}
-          className={cn('type-btn py-2 text-[10px]', type === 'histoire' && 'active')}
-        >
-          <Scroll className="w-3.5 h-3.5" />
-          Histoire
-        </button>
+        {TYPE_OPTIONS.map((option) => (
+          <button
+            type="button"
+            key={option.id}
+            onClick={() => setType(option.id)}
+            aria-pressed={type === option.id}
+            className={cn('type-btn py-2 text-[10px]', type === option.id && 'active')}
+          >
+            {option.icon}
+            {option.label}
+          </button>
+        ))}
       </div>
 
       {/* Template selector */}
@@ -77,8 +62,10 @@ export function TemplateSelector() {
         <div className="grid grid-cols-3 gap-2">
           {currentTemplates.map((template, index) => (
             <button
+              type="button"
               key={template.id}
               onClick={() => setTemplateIndex(index)}
+              aria-pressed={index === templateIndex}
               className={cn(
                 'template-btn p-2',
                 index === templateIndex && 'active'

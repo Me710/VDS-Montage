@@ -1,4 +1,18 @@
 import { NextResponse } from 'next/server'
+import { ApiError, fetchWithTimeout, handleRouteError } from '@/lib/api-server'
+
+export const dynamic = 'force-dynamic'
+
+// Date du jour au fuseau de Paris (calendrier liturgique « france » d'AELF).
+// toISOString() donnerait la date UTC, donc l'évangile du lendemain en soirée.
+function todayInParis(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+}
 
 interface AelfLecture {
   type: string
@@ -25,43 +39,42 @@ interface AelfResponse {
 // Fetch Gospel of the day from AELF.org API
 export async function GET() {
   try {
-    // Format today's date as YYYY-MM-DD
-    const today = new Date()
-    const date = today.toISOString().split('T')[0]
-    
+    const date = todayInParis()
+
     // AELF API endpoint for daily Mass readings
     const apiUrl = `https://api.aelf.org/v1/messes/${date}/france`
-    
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Accept': 'application/json',
-      },
-      cache: 'no-store' // Always fetch fresh data
-    })
-    
-    if (!response.ok) {
-      throw new Error(`AELF API error: ${response.status}`)
+
+    let response: Response
+    try {
+      response = await fetchWithTimeout(
+        apiUrl,
+        { headers: { Accept: 'application/json' }, cache: 'no-store' },
+        12_000
+      )
+    } catch {
+      throw new ApiError(502, 'upstream_error', "AELF.org ne répond pas. Réessayez dans un instant.")
     }
-    
-    const data = await response.json() as AelfResponse
-    
+
+    if (!response.ok) {
+      throw new ApiError(502, 'upstream_error', "AELF.org est momentanément indisponible. Réessayez dans un instant.")
+    }
+
+    const data = await response.json().catch(() => null) as AelfResponse | null
+    if (!data) {
+      throw new ApiError(502, 'upstream_error', "Réponse inattendue d'AELF.org. Réessayez dans un instant.")
+    }
+
     // Find the Gospel reading in the lectures array
     const messe = data.messes?.[0]
-    if (!messe || !messe.lectures) {
-      return NextResponse.json(
-        { error: "Messe non trouvée pour cette date" },
-        { status: 404 }
-      )
+    if (!messe || !Array.isArray(messe.lectures)) {
+      throw new ApiError(404, 'not_found', 'Messe non trouvée pour cette date.')
     }
     
     // Find the "evangile" type in lectures
     const evangile = messe.lectures.find(l => l.type === 'evangile')
     
-    if (!evangile) {
-      return NextResponse.json(
-        { error: "Évangile non trouvé pour cette date" },
-        { status: 404 }
-      )
+    if (!evangile || typeof evangile.contenu !== 'string') {
+      throw new ApiError(404, 'not_found', 'Évangile non trouvé pour cette date.')
     }
     
     // Clean up HTML tags from content
@@ -110,11 +123,6 @@ export async function GET() {
     })
     
   } catch (error) {
-    console.error('AELF API error:', error)
-    
-    return NextResponse.json(
-      { error: "Impossible de récupérer l'évangile. Vérifiez votre connexion." },
-      { status: 500 }
-    )
+    return handleRouteError(error, 'evangile', "Impossible de récupérer l'évangile du jour. Merci de réessayer.")
   }
 }

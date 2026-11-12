@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Playfair_Display, Lora, Merriweather, Cinzel, Cormorant_Garamond, Dancing_Script, Libre_Baskerville } from 'next/font/google'
+import { Toaster } from '@/components/ui/Toaster'
 import './globals.css'
 
 const inter = Inter({ 
@@ -48,8 +49,8 @@ const baskerville = Libre_Baskerville({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Le zoom reste autorisé (accessibilité)
+  maximumScale: 5,
   viewportFit: 'cover',
   themeColor: '#1a1a2e',
 }
@@ -72,6 +73,7 @@ export default function RootLayout({
     <html lang="fr" className={`${inter.variable} ${playfair.variable} ${lora.variable} ${merriweather.variable} ${cinzel.variable} ${cormorant.variable} ${dancing.variable} ${baskerville.variable}`}>
       <body className={`${inter.className} antialiased`}>
         {children}
+        <Toaster />
       </body>
     </html>
   )

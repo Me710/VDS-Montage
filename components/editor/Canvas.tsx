@@ -1,17 +1,19 @@
 'use client'
 
-import { useEffect, useCallback, forwardRef, useRef, useState } from 'react'
+import { useEffect, useCallback, forwardRef, useRef } from 'react'
 import { useEditorStore } from '@/lib/store'
-import { renderCanvas, CANVAS_DIMENSIONS } from '@/lib/canvas-utils'
+import { renderCanvas, CANVAS_DIMENSIONS, type CanvasState } from '@/lib/canvas-utils'
+import type { Template } from '@/lib/templates'
 import { Loader2 } from 'lucide-react'
 
+interface RenderJob {
+  template: Template
+  state: CanvasState
+}
+
 export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalRef) {
-  const internalRef = useRef<HTMLCanvasElement>(null)
-  const [canvasReady, setCanvasReady] = useState(false)
-  
-  // Always use internal ref for canvas operations
-  const canvasRef = internalRef
-  
+  const internalRef = useRef<HTMLCanvasElement | null>(null)
+
   const {
     type,
     templateIndex,
@@ -27,38 +29,52 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
     customFontFamily,
     fontSizeOffset,
     canvasFormat,
-    isGenerating,
+    generatingText,
+    generatingImage,
     getCurrentTemplate,
   } = useEditorStore()
 
   const dims = CANVAS_DIMENSIONS[canvasFormat]
 
-  // Mark canvas as ready after mount
-  useEffect(() => {
-    setCanvasReady(true)
+  // File de rendu « le dernier gagne » : renderCanvas est asynchrone (chargement
+  // d'images). Sans cette file, un rendu ancien qui se termine tard pouvait
+  // écraser un rendu plus récent.
+  const latestJob = useRef<RenderJob | null>(null)
+  const renderLoop = useRef({ running: false, pending: false })
+
+  const scheduleRender = useCallback(async () => {
+    const loop = renderLoop.current
+    if (loop.running) {
+      loop.pending = true
+      return
+    }
+
+    loop.running = true
+    try {
+      do {
+        loop.pending = false
+        const job = latestJob.current
+        const ctx = internalRef.current?.getContext('2d')
+        if (!job || !ctx) break
+        try {
+          await renderCanvas(ctx, job.template, job.state)
+        } catch (error) {
+          console.error('Error in renderCanvas:', error)
+        }
+      } while (loop.pending)
+    } finally {
+      loop.running = false
+    }
   }, [])
 
-  const updateCanvas = useCallback(async () => {
-    const canvas = canvasRef?.current
-    if (!canvas) {
-      console.log('Canvas not available')
-      return
-    }
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      console.log('Context not available')
-      return
-    }
-
+  // Re-render whenever something visible changes
+  useEffect(() => {
     const template = getCurrentTemplate()
-    if (!template) {
-      console.log('Template not available')
-      return
-    }
-    
-    try {
-      await renderCanvas(ctx, template, {
+    if (!template) return
+
+    latestJob.current = {
+      template,
+      state: {
         title,
         quote,
         author,
@@ -70,12 +86,10 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
         overlayOpacity,
         customFontFamily,
         fontSizeOffset,
-      })
-    } catch (error) {
-      console.error('Error in renderCanvas:', error)
+      },
     }
+    scheduleRender()
   }, [
-    canvasRef,
     type,
     templateIndex,
     title,
@@ -91,29 +105,27 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
     fontSizeOffset,
     canvasFormat,
     getCurrentTemplate,
+    scheduleRender,
   ])
 
-  // Update canvas when dependencies change
+  // Les polices web arrivent après le premier rendu : on redessine une fois
+  // qu'elles sont prêtes, sinon le texte reste dans la police de secours.
   useEffect(() => {
-    if (canvasReady) {
-      updateCanvas()
+    let cancelled = false
+    document.fonts?.ready
+      .then(() => {
+        if (!cancelled) scheduleRender()
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
     }
-  }, [updateCanvas, canvasReady])
-  
-  // Also update on initial mount with a small delay to ensure DOM is ready
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      updateCanvas()
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [])
+  }, [scheduleRender, customFontFamily])
 
   // Callback ref to handle both internal and external refs
   const setRefs = useCallback((node: HTMLCanvasElement | null) => {
-    // Set internal ref
-    (internalRef as React.MutableRefObject<HTMLCanvasElement | null>).current = node
-    
-    // Forward to external ref if provided
+    internalRef.current = node
+
     if (externalRef) {
       if (typeof externalRef === 'function') {
         externalRef(node)
@@ -121,7 +133,8 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
         (externalRef as React.MutableRefObject<HTMLCanvasElement | null>).current = node
       }
     }
-  }, [externalRef])
+    if (node) scheduleRender()
+  }, [externalRef, scheduleRender])
 
   return (
     <div className="flex items-center justify-center h-full w-full">
@@ -130,17 +143,37 @@ export const Canvas = forwardRef<HTMLCanvasElement>(function Canvas(_, externalR
           ref={setRefs}
           width={dims.width}
           height={dims.height}
+          role="img"
+          aria-label={`Aperçu du visuel${title ? ` : ${title}` : ''}`}
           className="max-w-full max-h-full rounded-lg object-contain"
-          style={{ 
+          style={{
             maxHeight: 'calc(100dvh - 140px)',
             maxWidth: 'calc(100vw - 16px)'
           }}
         />
-        
-        {isGenerating && (
-          <div className="absolute inset-0 bg-dark/80 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center gap-2 md:gap-3">
-            <Loader2 className="w-8 h-8 md:w-10 md:h-10 text-primary animate-spin" />
-            <p className="text-white text-xs md:text-sm font-medium">Génération...</p>
+
+        {/* Image en cours : on masque l'aperçu, il va changer entièrement */}
+        {generatingImage && (
+          <div
+            role="status"
+            className="absolute inset-0 bg-dark/80 backdrop-blur-sm rounded-lg flex flex-col items-center justify-center gap-2 md:gap-3 px-4 text-center"
+          >
+            <Loader2 className="w-8 h-8 md:w-10 md:h-10 text-primary animate-spin" aria-hidden />
+            <p className="text-white text-xs md:text-sm font-medium">
+              {generatingText ? 'Génération du texte et de l\'image...' : 'Génération de l\'image...'}
+            </p>
+            <p className="text-white/50 text-[11px] md:text-xs">Cela peut prendre jusqu&apos;à une minute.</p>
+          </div>
+        )}
+
+        {/* Texte seul : indicateur discret, l'aperçu reste visible */}
+        {generatingText && !generatingImage && (
+          <div
+            role="status"
+            className="absolute top-3 right-3 flex items-center gap-2 px-3 py-1.5 rounded-full bg-dark/85 border border-white/10 text-white text-xs"
+          >
+            <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" aria-hidden />
+            Génération du texte...
           </div>
         )}
       </div>

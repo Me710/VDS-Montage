@@ -6,12 +6,14 @@
 // d'environ 30 s. Au-delà, l'API répond 402/429 avec un en-tête Retry-After :
 // on attend puis on réessaie.
 
+import { ApiError } from './api-server'
+
 const POLLINATIONS_TEXT_URL = 'https://text.pollinations.ai/openai'
 const DEFAULT_TEXT_MODEL = 'openai-fast'
 
 const MAX_ATTEMPTS = 3
 const MAX_WAIT_MS = 32_000
-const REQUEST_TIMEOUT_MS = 45_000
+const REQUEST_TIMEOUT_MS = 30_000
 
 function retryDelayMs(res: Response, attempt: number): number {
   const retryAfter = Number(res.headers.get('retry-after'))
@@ -80,5 +82,13 @@ export async function generateTextWithPollinations(
     }
   }
 
-  throw lastError || new Error('Text generation failed')
+  console.error('[pollinations-text] all attempts failed:', lastError?.message)
+  if (lastError && /returned (402|429)$/.test(lastError.message)) {
+    throw new ApiError(429, 'rate_limited', 'Le service gratuit est très sollicité. Patientez 30 secondes puis réessayez.')
+  }
+  throw new ApiError(
+    502,
+    'upstream_error',
+    'Le service de génération de texte est momentanément indisponible. Réessayez dans quelques secondes.'
+  )
 }

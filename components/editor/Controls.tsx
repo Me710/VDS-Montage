@@ -89,8 +89,9 @@ export function Controls() {
       {/* Title input */}
       {showTitle && (
         <div className="space-y-1">
-          <label className="text-xs font-medium text-white/60">{titleLabel}</label>
+          <label htmlFor="control-1" className="text-xs font-medium text-white/60">{titleLabel}</label>
           <input
+            id="control-1"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -105,7 +106,7 @@ export function Controls() {
       {showQuote && (
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <label className="text-xs font-medium text-white/60">
+            <label htmlFor="control-2" className="text-xs font-medium text-white/60">
               {isHistoireType ? 'Biographie' : isEvangileType ? (isEvangileNarratif ? 'Évangile complet' : 'Verset') : 'Citation'}
             </label>
             <span className="text-[10px] text-white/40">
@@ -113,6 +114,7 @@ export function Controls() {
             </span>
           </div>
           <textarea
+            id="control-2"
             value={quote}
             onChange={(e) => setQuote(e.target.value)}
             maxLength={isEvangileNarratif ? 1000 : isHistoireType ? 500 : 300}
@@ -126,8 +128,9 @@ export function Controls() {
       {/* Author input */}
       {showAuthor && (
         <div className="space-y-1">
-          <label className="text-xs font-medium text-white/60">{authorLabel}</label>
+          <label htmlFor="control-3" className="text-xs font-medium text-white/60">{authorLabel}</label>
           <input
+            id="control-3"
             type="text"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
@@ -173,8 +176,9 @@ export function Controls() {
 
         {/* Font family selector */}
         <div className="space-y-1">
-          <label className="text-[10px] text-white/50">Police</label>
+          <label htmlFor="control-4" className="text-[10px] text-white/50">Police</label>
           <select
+            id="control-4"
             value={customFontFamily}
             onChange={(e) => setCustomFontFamily(e.target.value)}
             className="input-field text-sm py-2 w-full"
@@ -191,12 +195,13 @@ export function Controls() {
         {/* Font size offset slider */}
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <label className="text-xs text-white/60">Taille de police</label>
+            <label htmlFor="control-5" className="text-xs text-white/60">Taille de police</label>
             <span className="text-xs text-primary font-medium">
               {fontSizeOffset > 0 ? `+${fontSizeOffset}` : fontSizeOffset}px
             </span>
           </div>
           <input
+            id="control-5"
             type="range"
             min="-20"
             max="20"
@@ -220,8 +225,9 @@ export function Controls() {
         <div className="grid grid-cols-3 gap-2">
           {/* Frame color */}
           <div className="space-y-1">
-            <label className="text-[10px] text-white/50">Cadre</label>
+            <label htmlFor="control-6" className="text-[10px] text-white/50">Cadre</label>
             <input
+              id="control-6"
               type="color"
               value={frameColor}
               onChange={(e) => setFrameColor(e.target.value)}
@@ -231,8 +237,9 @@ export function Controls() {
 
           {/* Text color */}
           <div className="space-y-1">
-            <label className="text-[10px] text-white/50">Texte</label>
+            <label htmlFor="control-7" className="text-[10px] text-white/50">Texte</label>
             <input
+              id="control-7"
               type="color"
               value={textColor}
               onChange={(e) => setTextColor(e.target.value)}
@@ -242,8 +249,9 @@ export function Controls() {
 
           {/* Overlay color */}
           <div className="space-y-1">
-            <label className="text-[10px] text-white/50">Overlay</label>
+            <label htmlFor="control-8" className="text-[10px] text-white/50">Overlay</label>
             <input
+              id="control-8"
               type="color"
               value={overlayColor}
               onChange={(e) => setOverlayColor(e.target.value)}
@@ -255,10 +263,11 @@ export function Controls() {
         {/* Overlay opacity */}
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <label className="text-xs text-white/60">Opacité</label>
+            <label htmlFor="control-9" className="text-xs text-white/60">Opacité</label>
             <span className="text-xs text-primary font-medium">{overlayOpacity}%</span>
           </div>
           <input
+            id="control-9"
             type="range"
             min="0"
             max="100"
